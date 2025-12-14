@@ -1,0 +1,30 @@
+service: layers
+
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs20.x
+  profile: mokari-kairo
+
+custom:
+  config: ../envs/credentials.${self:provider.stage}.json
+
+layers:
+  nodejs:
+    name: kairo-core-${opt:stage, 'dev'}-layers
+    description: "kairo-core dependencies"
+    path: ../layers
+    compatibleRuntimes:
+      - nodejs20.x
+      - nodejs18.x
+
+resources:
+  Outputs:
+    NodejsLayerExport:
+      Value:
+        Ref: NodejsLambdaLayer
+      Export:
+        Name: kairo-core-${opt:stage, 'dev'}-NodejsLambdaLayer
+

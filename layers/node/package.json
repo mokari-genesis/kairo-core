@@ -1,0 +1,16 @@
+{
+  "name": "kairo-core-layers",
+  "version": "1.0.0",
+  "description": "All node modules for all lambdas",
+  "author": "mokari",
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.687.0",
+    "jsonwebtoken": "^9.0.2",
+    "jwk-to-pem": "^2.0.6",
+    "lambda-warmer": "^2.2.0",
+    "mysql2": "^3.6.5"
+  },
+  "devDependencies": {}
+}
+
