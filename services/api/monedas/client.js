@@ -11,7 +11,7 @@ const getMonedas = fetchResultMysql(
       [activo || null, activo || null]
     ),
   { singleResult: false }
-)
+);
 
 const createMoneda = fetchResultMysql(
   async (
@@ -42,14 +42,14 @@ const createMoneda = fetchResultMysql(
         tasa_vs_base,
         tasa_actualizada,
       ]
-    )
+    );
     const [result] = await connection.execute(
-      'SELECT * FROM monedas WHERE id = LAST_INSERT_ID()'
-    )
-    return result
+      "SELECT * FROM monedas WHERE id = LAST_INSERT_ID()"
+    );
+    return result;
   },
   { singleResult: true }
-)
+);
 
 const updateMoneda = fetchResultMysql(
   async (
@@ -90,33 +90,33 @@ const updateMoneda = fetchResultMysql(
         tasa_actualizada,
         id,
       ]
-    )
+    );
     const [result] = await connection.execute(
-      'SELECT * FROM monedas WHERE id = ?',
+      "SELECT * FROM monedas WHERE id = ?",
       [id]
-    )
-    return result
+    );
+    return result;
   },
   { singleResult: true }
-)
+);
 
 const deleteMoneda = fetchResultMysql(
   async ({ id }, connection) => {
     const [existingRecord] = await connection.execute(
-      'SELECT * FROM monedas WHERE id = ?',
+      "SELECT * FROM monedas WHERE id = ?",
       [id]
-    )
+    );
 
     if (existingRecord.length === 0) {
-      throw new Error('Moneda no encontrada')
+      throw new Error("Moneda no encontrada");
     }
 
-    await connection.execute(`DELETE FROM monedas WHERE id = ?`, [id])
+    await connection.execute(`DELETE FROM monedas WHERE id = ?`, [id]);
 
-    return existingRecord
+    return existingRecord;
   },
   { singleResult: true }
-)
+);
 
 // Handler functions
 const getMoneda = async ({ request, params }) => {
@@ -139,7 +139,7 @@ const postMoneda = async ({ request, params }) => {
   } = params;
 
   if (!codigo || !nombre) {
-    throw new Error('Missing required fields: codigo and nombre are required')
+    throw new Error("Missing required fields: codigo and nombre are required");
   }
 
   const moneda = await createMoneda({
@@ -169,7 +169,7 @@ const putMoneda = async ({ request, params }) => {
   } = params;
 
   if (!id) {
-    throw new Error('Missing required fields: id is required')
+    throw new Error("Missing required fields: id is required");
   }
 
   const moneda = await updateMoneda({
@@ -185,7 +185,7 @@ const putMoneda = async ({ request, params }) => {
   });
 
   if (moneda && moneda.length === 0) {
-    throw new Error('Moneda no encontrada')
+    throw new Error("Moneda no encontrada");
   }
 
   return moneda;
@@ -195,7 +195,7 @@ const deleteMonedaHandler = async ({ request, params }) => {
   const { id } = params;
 
   if (!id) {
-    throw new Error('Missing required fields: id is required')
+    throw new Error("Missing required fields: id is required");
   }
 
   await deleteMoneda({ id });
@@ -208,4 +208,3 @@ module.exports = {
   putMoneda,
   deleteMoneda: deleteMonedaHandler,
 };
-

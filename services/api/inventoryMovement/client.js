@@ -50,7 +50,7 @@ const getInventoryMovements = fetchResultMysql(
       ]
     ),
   { singleResult: false }
-)
+);
 
 const createInventoryMovement = fetchResultMysql(
   async (
@@ -64,24 +64,24 @@ const createInventoryMovement = fetchResultMysql(
       ) VALUES (?, ?, ?, ?, ?, ?)
       `,
       [empresa_id, product_id, user_id, movement_type, quantity, comment]
-    )
+    );
     const [result] = await connection.execute(
-      'SELECT * FROM movimientos_inventario WHERE id = LAST_INSERT_ID()'
-    )
-    return result
+      "SELECT * FROM movimientos_inventario WHERE id = LAST_INSERT_ID()"
+    );
+    return result;
   },
   { singleResult: true }
-)
+);
 
 const deleteInventoryMovement = fetchResultMysql(
   async ({ id }, connection) => {
     const [existingRecord] = await connection.execute(
-      'SELECT * FROM movimientos_inventario WHERE id = ?',
+      "SELECT * FROM movimientos_inventario WHERE id = ?",
       [id]
-    )
+    );
 
     if (existingRecord.length === 0) {
-      throw new Error('Inventory movement not found')
+      throw new Error("Inventory movement not found");
     }
 
     await connection.execute(
@@ -90,12 +90,12 @@ const deleteInventoryMovement = fetchResultMysql(
       WHERE id = ?
       `,
       [id]
-    )
+    );
 
-    return existingRecord
+    return existingRecord;
   },
   { singleResult: true }
-)
+);
 
 const updateInventoryMovement = fetchResultMysql(
   async ({ id, product_id, movement_type, quantity, comment }, connection) => {
@@ -110,15 +110,15 @@ const updateInventoryMovement = fetchResultMysql(
       WHERE id = ?
       `,
       [product_id, movement_type, quantity, comment, id]
-    )
+    );
     const [result] = await connection.execute(
-      'SELECT * FROM movimientos_inventario WHERE id = ?',
+      "SELECT * FROM movimientos_inventario WHERE id = ?",
       [id]
-    )
-    return result
+    );
+    return result;
   },
   { singleResult: true }
-)
+);
 
 // Handler functions
 const getInventoryMovement = async ({ request, params }) => {
@@ -147,14 +147,8 @@ const getInventoryMovement = async ({ request, params }) => {
 };
 
 const postInventoryMovement = async ({ request, params }) => {
-  const {
-    empresa_id,
-    product_id,
-    user_id,
-    movement_type,
-    quantity,
-    comment,
-  } = params;
+  const { empresa_id, product_id, user_id, movement_type, quantity, comment } =
+    params;
 
   if (
     !empresa_id ||
@@ -164,7 +158,7 @@ const postInventoryMovement = async ({ request, params }) => {
     !quantity ||
     !comment
   ) {
-    throw new Error('Missing required fields')
+    throw new Error("Missing required fields");
   }
 
   const movement = await createInventoryMovement({
@@ -179,16 +173,10 @@ const postInventoryMovement = async ({ request, params }) => {
 };
 
 const putInventoryMovement = async ({ request, params }) => {
-  const {
-    id,
-    product_id,
-    movement_type,
-    quantity,
-    comment,
-  } = params;
+  const { id, product_id, movement_type, quantity, comment } = params;
 
   if (!id || !product_id || !movement_type || !quantity || !comment) {
-    throw new Error('Missing required fields')
+    throw new Error("Missing required fields");
   }
 
   const movement = await updateInventoryMovement({
@@ -200,7 +188,7 @@ const putInventoryMovement = async ({ request, params }) => {
   });
 
   if (!movement) {
-    throw new Error('Inventory movement not found')
+    throw new Error("Inventory movement not found");
   }
 
   return movement;
@@ -210,7 +198,7 @@ const deleteInventoryMovementHandler = async ({ request, params }) => {
   const { id } = params;
 
   if (!id) {
-    throw new Error('Missing required fields')
+    throw new Error("Missing required fields");
   }
 
   await deleteInventoryMovement({ id });
@@ -223,4 +211,3 @@ module.exports = {
   putInventoryMovement,
   deleteInventoryMovement: deleteInventoryMovementHandler,
 };
-

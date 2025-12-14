@@ -20,14 +20,14 @@ const app = async (event) => {
       return util.response(400, { message: "Route not found.", request });
     }
 
-    const normalizedHeaders = util.normalizeKeysToLowercase(event.headers);
+    //const normalizedHeaders = util.normalizeKeysToLowercase(event.headers);
 
     /*const isTokenValid = async () => {
       if (route.public) {
         return true;
       }
       return isValidToken(normalizedHeaders.authorization);
-    };*/
+    };
 
     //const validToken = await isTokenValid();
 
@@ -41,11 +41,12 @@ const app = async (event) => {
 */
     const user = {
       email: "m@m.com",
+      authorised: true,
     };
     //isAuthorized is a function that checks if the user is authorized to access the api
     if (!route.public) {
       const isAuthorized = user?.authorised ?? false;
-      const userId = user?.userId;
+      //const userId = user?.userId;
 
       if (!isAuthorized) {
         Logger.unexpected("Unauthorized", { user });
@@ -74,7 +75,4 @@ const app = async (event) => {
   }
 };
 
-module.exports = {
-  app,
-};
-
+module.exports.app = app;

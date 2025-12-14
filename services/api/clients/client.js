@@ -18,7 +18,7 @@ const getClients = fetchResultMysql(
       type || null,
       nit || null,
       nit || null,
-    ]
+    ];
 
     return connection.execute(
       `SELECT * FROM clientes 
@@ -30,9 +30,9 @@ const getClients = fetchResultMysql(
     AND (? IS NULL OR tipo = ?)
     AND (? IS NULL OR nit = ?)`,
       params
-    )
+    );
   }
-)
+);
 
 const createClient = fetchResultMysql(
   async (
@@ -46,18 +46,18 @@ const createClient = fetchResultMysql(
       ) VALUES (?, ?, ?, ?, ?, ?, ?)
       `,
       [empresa_id, name, type, nit, email, phone, address]
-    )
+    );
     const [result] = await connection.execute(
-      'SELECT * FROM clientes WHERE id = LAST_INSERT_ID()'
-    )
-    return result
+      "SELECT * FROM clientes WHERE id = LAST_INSERT_ID()"
+    );
+    return result;
   },
   { singleResult: true }
-)
+);
 
 const deleteClient = fetchResultMysql(({ id }, connection) => {
-  return connection.execute(`DELETE FROM clientes WHERE id = ?`, [id])
-})
+  return connection.execute(`DELETE FROM clientes WHERE id = ?`, [id]);
+});
 
 const updateClient = fetchResultMysql(
   async ({ id, name, type, nit, email, phone, address }, connection) => {
@@ -73,15 +73,15 @@ const updateClient = fetchResultMysql(
       WHERE id = ?
       `,
       [name, type, nit, email, phone, address, id]
-    )
+    );
     const [result] = await connection.execute(
-      'SELECT * FROM clientes WHERE id = ?',
+      "SELECT * FROM clientes WHERE id = ?",
       [id]
-    )
-    return result
+    );
+    return result;
   },
   { singleResult: true }
-)
+);
 
 const getClient = async ({ request, params }) => {
   const { name, email, phone, address, empresa_id, type, nit } = params;
@@ -100,15 +100,7 @@ const getClient = async ({ request, params }) => {
 const postClient = async ({ request, params }) => {
   const { empresa_id, name, type, nit, email, phone, address } = params;
 
-  if (
-    !empresa_id ||
-    !name ||
-    !type ||
-    !nit ||
-    !address ||
-    !phone ||
-    !email
-  ) {
+  if (!empresa_id || !name || !type || !nit || !address || !phone || !email) {
     throw new Error("Missing required fields");
   }
 
@@ -127,15 +119,7 @@ const postClient = async ({ request, params }) => {
 const putClient = async ({ request, params }) => {
   const { id, name, type, nit, address, phone, email } = params;
 
-  if (
-    !id ||
-    !name ||
-    !type ||
-    !nit ||
-    !address ||
-    !phone ||
-    !email
-  ) {
+  if (!id || !name || !type || !nit || !address || !phone || !email) {
     throw new Error("Missing required fields");
   }
 
@@ -173,4 +157,3 @@ module.exports = {
   putClient,
   deleteClient: deleteClientHandler,
 };
-

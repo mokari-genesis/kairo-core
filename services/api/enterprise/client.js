@@ -26,7 +26,7 @@ const getEmpresas = fetchResultMysql(
       ]
     ),
   { singleResult: false }
-)
+);
 
 const createEmpresa = fetchResultMysql(
   async ({ nombre, nit, direccion, telefono, email }, connection) => {
@@ -36,35 +36,35 @@ const createEmpresa = fetchResultMysql(
         VALUES (?, ?, ?, ?, ?)
         `,
       [nombre, nit, direccion, telefono, email]
-    )
+    );
     const [result] = await connection.execute(
-      'SELECT * FROM empresas WHERE id = LAST_INSERT_ID()'
-    )
-    return result
+      "SELECT * FROM empresas WHERE id = LAST_INSERT_ID()"
+    );
+    return result;
   },
   { singleResult: true }
-)
+);
 
 const deleteEmpresa = fetchResultMysql(
   async ({ id }, connection) => {
     // First, get the record before deleting it
     const [existingRecord] = await connection.execute(
-      'SELECT * FROM empresas WHERE id = ?',
+      "SELECT * FROM empresas WHERE id = ?",
       [id]
-    )
+    );
 
     if (existingRecord.length === 0) {
-      throw new Error('Empresa not found')
+      throw new Error("Empresa not found");
     }
 
     // Delete the record
-    await connection.execute(`DELETE FROM empresas WHERE id = ?`, [id])
+    await connection.execute(`DELETE FROM empresas WHERE id = ?`, [id]);
 
     // Return the deleted record
-    return existingRecord
+    return existingRecord;
   },
   { singleResult: true }
-)
+);
 
 const updateEmpresa = fetchResultMysql(
   async ({ id, nombre, nit, direccion, telefono, email }, connection) => {
@@ -75,15 +75,15 @@ const updateEmpresa = fetchResultMysql(
         WHERE id = ?
         `,
       [nombre, nit, direccion, telefono, email, id]
-    )
+    );
     const [result] = await connection.execute(
-      'SELECT * FROM empresas WHERE id = ?',
+      "SELECT * FROM empresas WHERE id = ?",
       [id]
-    )
-    return result
+    );
+    return result;
   },
   { singleResult: true }
-)
+);
 
 const getEnterprise = async ({ request, params }) => {
   const { nombre, nit, direccion, telefono, email } = params;
@@ -100,13 +100,7 @@ const getEnterprise = async ({ request, params }) => {
 const postEnterprise = async ({ request, params }) => {
   const { nombre, nit, direccion, telefono, email } = params;
 
-  if (
-    !nombre ||
-    !nit ||
-    !direccion ||
-    !telefono ||
-    !email
-  ) {
+  if (!nombre || !nit || !direccion || !telefono || !email) {
     throw new Error("Missing required fields");
   }
 
@@ -121,23 +115,9 @@ const postEnterprise = async ({ request, params }) => {
 };
 
 const putEnterprise = async ({ request, params }) => {
-  const {
-    id,
-    nombre,
-    nit,
-    direccion,
-    telefono,
-    email,
-  } = params;
+  const { id, nombre, nit, direccion, telefono, email } = params;
 
-  if (
-    !id ||
-    !nombre ||
-    !nit ||
-    !direccion ||
-    !telefono ||
-    !email
-  ) {
+  if (!id || !nombre || !nit || !direccion || !telefono || !email) {
     throw new Error("Missing required fields");
   }
 
@@ -174,4 +154,3 @@ module.exports = {
   putEnterprise,
   deleteEnterprise,
 };
-

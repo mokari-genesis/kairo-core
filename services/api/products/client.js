@@ -51,7 +51,7 @@ const getProducts = fetchResultMysql(
         nombre_proveedor ?? null,
       ]
     )
-)
+);
 
 const createProduct = fetchResultMysql(
   async (
@@ -61,7 +61,7 @@ const createProduct = fetchResultMysql(
       serie,
       descripcion,
       categoria,
-      estado = 'activo',
+      estado = "activo",
       stock = 0,
       precio = 0,
       proveedor_id,
@@ -93,7 +93,7 @@ const createProduct = fetchResultMysql(
         precio,
         proveedor_id,
       ]
-    )
+    );
     const [result] = await connection.execute(
       `
       SELECT p.*, pr.nombre as nombre_proveedor
@@ -101,28 +101,28 @@ const createProduct = fetchResultMysql(
       LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
       WHERE p.id = LAST_INSERT_ID()
       `
-    )
-    return result
+    );
+    return result;
   },
   { singleResult: true }
-)
+);
 
 const deleteProducts = fetchResultMysql(async ({ product_ids }, connection) => {
-  const ids = Array.isArray(product_ids) ? product_ids : [product_ids]
-  const placeholders = ids.map(() => '?').join(',')
+  const ids = Array.isArray(product_ids) ? product_ids : [product_ids];
+  const placeholders = ids.map(() => "?").join(",");
   await connection.execute(
     `
     DELETE FROM productos 
     WHERE id IN (${placeholders})
     `,
     ids
-  )
+  );
   const [result] = await connection.execute(
     `SELECT * FROM productos WHERE id IN (${placeholders})`,
     ids
-  )
-  return result
-})
+  );
+  return result;
+});
 
 const updateProduct = fetchResultMysql(
   async (
@@ -162,7 +162,7 @@ const updateProduct = fetchResultMysql(
         product_id,
         empresa_id,
       ]
-    )
+    );
     const [result] = await connection.execute(
       `
       SELECT p.*, pr.nombre as nombre_proveedor
@@ -171,10 +171,10 @@ const updateProduct = fetchResultMysql(
       WHERE p.id = ? AND p.empresa_id = ?
       `,
       [product_id, empresa_id]
-    )
-    return result
+    );
+    return result;
   }
-)
+);
 
 const getProductosPrecios = fetchResultMysql(
   ({ producto_id, tipo }, connection) =>
@@ -190,7 +190,7 @@ const getProductosPrecios = fetchResultMysql(
       [producto_id || null, producto_id || null, tipo || null, tipo || null]
     ),
   { singleResult: false }
-)
+);
 
 const createProductoPrecio = fetchResultMysql(
   async ({ producto_id, tipo, precio }, connection) => {
@@ -200,7 +200,7 @@ const createProductoPrecio = fetchResultMysql(
       VALUES (?, ?, ?)
       `,
       [producto_id, tipo, precio]
-    )
+    );
     const [result] = await connection.execute(
       `
       SELECT pp.*, p.codigo as producto_codigo, p.descripcion as producto_descripcion
@@ -208,11 +208,11 @@ const createProductoPrecio = fetchResultMysql(
       LEFT JOIN productos p ON pp.producto_id = p.id
       WHERE pp.id = LAST_INSERT_ID()
       `
-    )
-    return result
+    );
+    return result;
   },
   { singleResult: true }
-)
+);
 
 const updateProductoPrecio = fetchResultMysql(
   async ({ id, precio }, connection) => {
@@ -223,7 +223,7 @@ const updateProductoPrecio = fetchResultMysql(
       WHERE id = ?
       `,
       [precio, id]
-    )
+    );
     const [result] = await connection.execute(
       `
       SELECT pp.*, p.codigo as producto_codigo, p.descripcion as producto_descripcion
@@ -232,11 +232,11 @@ const updateProductoPrecio = fetchResultMysql(
       WHERE pp.id = ?
       `,
       [id]
-    )
-    return result
+    );
+    return result;
   },
   { singleResult: true }
-)
+);
 
 const deleteProductoPrecio = fetchResultMysql(
   async ({ id }, connection) => {
@@ -249,20 +249,22 @@ const deleteProductoPrecio = fetchResultMysql(
       WHERE pp.id = ?
       `,
       [id]
-    )
+    );
 
     if (existingRecord.length === 0) {
-      throw new Error('Precio de producto no encontrado')
+      throw new Error("Precio de producto no encontrado");
     }
 
     // Delete the record
-    await connection.execute(`DELETE FROM productos_precios WHERE id = ?`, [id])
+    await connection.execute(`DELETE FROM productos_precios WHERE id = ?`, [
+      id,
+    ]);
 
     // Return the deleted record
-    return existingRecord
+    return existingRecord;
   },
   { singleResult: true }
-)
+);
 
 // Handler functions
 const getProduct = async ({ request, params }) => {
@@ -318,7 +320,7 @@ const postProduct = async ({ request, params }) => {
     !estado ||
     stock === undefined
   ) {
-    throw new Error('Missing required fields')
+    throw new Error("Missing required fields");
   }
 
   const product = await createProduct({
@@ -348,11 +350,8 @@ const putProduct = async ({ request, params }) => {
     proveedor_id,
   } = params;
 
-  if (
-    !product_id ||
-    !empresa_id
-  ) {
-    throw new Error('Missing required fields')
+  if (!product_id || !empresa_id) {
+    throw new Error("Missing required fields");
   }
 
   const product = await updateProduct({
@@ -368,7 +367,7 @@ const putProduct = async ({ request, params }) => {
   });
 
   if (product && product.length === 0) {
-    throw new Error('Product not found')
+    throw new Error("Product not found");
   }
 
   return product;
@@ -378,7 +377,7 @@ const deleteProduct = async ({ request, params }) => {
   const { product_ids } = params;
 
   if (!product_ids) {
-    throw new Error('Missing required fields')
+    throw new Error("Missing required fields");
   }
 
   await deleteProducts({ product_ids });
@@ -398,8 +397,8 @@ const postPrecio = async ({ request, params }) => {
 
   if (!producto_id || !tipo || precio === undefined) {
     throw new Error(
-      'Missing required fields: producto_id, tipo, and precio are required'
-    )
+      "Missing required fields: producto_id, tipo, and precio are required"
+    );
   }
 
   const productoPrecio = await createProductoPrecio({
@@ -414,7 +413,7 @@ const putPrecio = async ({ request, params }) => {
   const { id, precio } = params;
 
   if (!id || precio === undefined) {
-    throw new Error('Missing required fields: id and precio are required')
+    throw new Error("Missing required fields: id and precio are required");
   }
 
   const productoPrecio = await updateProductoPrecio({
@@ -423,7 +422,7 @@ const putPrecio = async ({ request, params }) => {
   });
 
   if (productoPrecio && productoPrecio.length === 0) {
-    throw new Error('Precio de producto no encontrado')
+    throw new Error("Precio de producto no encontrado");
   }
 
   return productoPrecio;
@@ -433,7 +432,7 @@ const deletePrecio = async ({ request, params }) => {
   const { id } = params;
 
   if (!id) {
-    throw new Error('Missing required fields: id is required')
+    throw new Error("Missing required fields: id is required");
   }
 
   await deleteProductoPrecio({ id });
@@ -450,4 +449,3 @@ module.exports = {
   putPrecio,
   deletePrecio,
 };
-

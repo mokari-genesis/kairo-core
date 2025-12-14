@@ -71,10 +71,10 @@ const getMetodosPagoUnificado = fetchResultMysql(
         fecha_pago_fin || null,
         fecha_pago_fin || null,
       ]
-    )
+    );
   },
   { singleResult: false }
-)
+);
 
 const getMetodosPagoUnificadoResumen = fetchResultMysql(
   async (
@@ -95,42 +95,42 @@ const getMetodosPagoUnificadoResumen = fetchResultMysql(
     },
     connection
   ) => {
-    let groupByClause = ''
-    let selectFields = ''
+    let groupByClause = "";
+    let selectFields = "";
 
     switch (agrupar_por) {
-      case 'metodo_pago':
-        groupByClause = 'metodo_pago_id, metodo_pago'
-        selectFields = 'metodo_pago_id, metodo_pago, NULL as grupo_nombre'
-        break
-      case 'cliente':
-        groupByClause = 'cliente_id, cliente_nombre'
+      case "metodo_pago":
+        groupByClause = "metodo_pago_id, metodo_pago";
+        selectFields = "metodo_pago_id, metodo_pago, NULL as grupo_nombre";
+        break;
+      case "cliente":
+        groupByClause = "cliente_id, cliente_nombre";
         selectFields =
-          'cliente_id, cliente_nombre as grupo_nombre, NULL as metodo_pago'
-        break
-      case 'usuario':
-        groupByClause = 'usuario_id, usuario_nombre'
+          "cliente_id, cliente_nombre as grupo_nombre, NULL as metodo_pago";
+        break;
+      case "usuario":
+        groupByClause = "usuario_id, usuario_nombre";
         selectFields =
-          'usuario_id, usuario_nombre as grupo_nombre, NULL as metodo_pago'
-        break
-      case 'moneda':
-        groupByClause = 'moneda_pago_id, moneda_pago_codigo'
+          "usuario_id, usuario_nombre as grupo_nombre, NULL as metodo_pago";
+        break;
+      case "moneda":
+        groupByClause = "moneda_pago_id, moneda_pago_codigo";
         selectFields =
-          'moneda_pago_id, moneda_pago_codigo as grupo_nombre, NULL as metodo_pago'
-        break
-      case 'fecha_venta_dia':
-        groupByClause = 'fecha_venta_dia'
+          "moneda_pago_id, moneda_pago_codigo as grupo_nombre, NULL as metodo_pago";
+        break;
+      case "fecha_venta_dia":
+        groupByClause = "fecha_venta_dia";
         selectFields =
-          'fecha_venta_dia as grupo_nombre, NULL as metodo_pago, NULL as cliente_id'
-        break
-      case 'fecha_pago_dia':
-        groupByClause = 'fecha_pago_dia'
+          "fecha_venta_dia as grupo_nombre, NULL as metodo_pago, NULL as cliente_id";
+        break;
+      case "fecha_pago_dia":
+        groupByClause = "fecha_pago_dia";
         selectFields =
-          'fecha_pago_dia as grupo_nombre, NULL as metodo_pago, NULL as cliente_id'
-        break
+          "fecha_pago_dia as grupo_nombre, NULL as metodo_pago, NULL as cliente_id";
+        break;
       default:
-        groupByClause = 'metodo_pago_id, metodo_pago'
-        selectFields = 'metodo_pago_id, metodo_pago, NULL as grupo_nombre'
+        groupByClause = "metodo_pago_id, metodo_pago";
+        selectFields = "metodo_pago_id, metodo_pago, NULL as grupo_nombre";
     }
 
     return connection.execute(
@@ -197,10 +197,10 @@ const getMetodosPagoUnificadoResumen = fetchResultMysql(
         fecha_pago_fin || null,
         fecha_pago_fin || null,
       ]
-    )
+    );
   },
   { singleResult: false }
-)
+);
 
 // Handler functions
 const getMetodosPagoUnificadoHandler = async ({ request, params }) => {
@@ -236,7 +236,7 @@ const getMetodosPagoUnificadoHandler = async ({ request, params }) => {
     fecha_pago_inicio,
     fecha_pago_fin,
     venta_es_vendida: venta_es_vendida
-      ? venta_es_vendida === 'true' || venta_es_vendida === '1'
+      ? venta_es_vendida === "true" || venta_es_vendida === "1"
       : null,
     limit: !isNaN(parseInt(limit)) ? parseInt(limit) : 100,
     offset: !isNaN(parseInt(offset)) ? parseInt(offset) : 0,
@@ -258,7 +258,7 @@ const getMetodosPagoUnificadoResumenHandler = async ({ request, params }) => {
     fecha_pago_inicio,
     fecha_pago_fin,
     venta_es_vendida,
-    agrupar_por = 'metodo_pago',
+    agrupar_por = "metodo_pago",
   } = params;
 
   const resumen = await getMetodosPagoUnificadoResumen({
@@ -283,4 +283,3 @@ module.exports = {
   getMetodosPagoUnificado: getMetodosPagoUnificadoHandler,
   getMetodosPagoUnificadoResumen: getMetodosPagoUnificadoResumenHandler,
 };
-

@@ -1,0 +1,18 @@
+{
+  "name": "kairo-core-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "handler.js",
+  "scripts": {
+    "local": "AWS_PROFILE=mokari-kairo ./node_modules/.bin/nodemon --watch ../.. --ext js,yml --exec './node_modules/.bin/serverless offline --stage localhost'",
+    "prod": "AWS_PROFILE=mokari-kairo ./node_modules/.bin/nodemon --watch ../.. --ext js,yml --exec './node_modules/.bin/serverless offline --stage production'"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.347.0",
+    "nodemon": "^2.0.22",
+    "serverless-offline": "^14.4.0",
+    "mysql2": "^3.6.5"   
+  }
+}

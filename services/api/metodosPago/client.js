@@ -12,7 +12,7 @@ const getMetodosPago = fetchResultMysql(
       [activo || null, activo || null, nombre || null, nombre || null]
     ),
   { singleResult: false }
-)
+);
 
 const createMetodoPago = fetchResultMysql(
   async ({ nombre, activo = true }, connection) => {
@@ -22,14 +22,14 @@ const createMetodoPago = fetchResultMysql(
       VALUES (?, ?)
       `,
       [nombre, activo]
-    )
+    );
     const [result] = await connection.execute(
-      'SELECT * FROM metodos_pago WHERE id = LAST_INSERT_ID()'
-    )
-    return result
+      "SELECT * FROM metodos_pago WHERE id = LAST_INSERT_ID()"
+    );
+    return result;
   },
   { singleResult: true }
-)
+);
 
 const updateMetodoPago = fetchResultMysql(
   async ({ id, nombre, activo }, connection) => {
@@ -41,33 +41,33 @@ const updateMetodoPago = fetchResultMysql(
       WHERE id = ?
       `,
       [nombre, activo, id]
-    )
+    );
     const [result] = await connection.execute(
-      'SELECT * FROM metodos_pago WHERE id = ?',
+      "SELECT * FROM metodos_pago WHERE id = ?",
       [id]
-    )
-    return result
+    );
+    return result;
   },
   { singleResult: true }
-)
+);
 
 const deleteMetodoPago = fetchResultMysql(
   async ({ id }, connection) => {
     const [existingRecord] = await connection.execute(
-      'SELECT * FROM metodos_pago WHERE id = ?',
+      "SELECT * FROM metodos_pago WHERE id = ?",
       [id]
-    )
+    );
 
     if (existingRecord.length === 0) {
-      throw new Error('Método de pago no encontrado')
+      throw new Error("Método de pago no encontrado");
     }
 
-    await connection.execute(`DELETE FROM metodos_pago WHERE id = ?`, [id])
+    await connection.execute(`DELETE FROM metodos_pago WHERE id = ?`, [id]);
 
-    return existingRecord
+    return existingRecord;
   },
   { singleResult: true }
-)
+);
 
 // Handler functions
 const getMetodoPago = async ({ request, params }) => {
@@ -81,7 +81,7 @@ const postMetodoPago = async ({ request, params }) => {
   const { nombre, activo = true } = params;
 
   if (!nombre) {
-    throw new Error('Missing required fields')
+    throw new Error("Missing required fields");
   }
 
   const metodoPago = await createMetodoPago({
@@ -95,7 +95,7 @@ const putMetodoPago = async ({ request, params }) => {
   const { id, nombre, activo } = params;
 
   if (!id) {
-    throw new Error('Missing required fields')
+    throw new Error("Missing required fields");
   }
 
   const metodoPago = await updateMetodoPago({
@@ -105,7 +105,7 @@ const putMetodoPago = async ({ request, params }) => {
   });
 
   if (metodoPago && metodoPago.length === 0) {
-    throw new Error('Método de pago no encontrado')
+    throw new Error("Método de pago no encontrado");
   }
 
   return metodoPago;
@@ -115,7 +115,7 @@ const deleteMetodoPagoHandler = async ({ request, params }) => {
   const { id } = params;
 
   if (!id) {
-    throw new Error('Missing required fields')
+    throw new Error("Missing required fields");
   }
 
   await deleteMetodoPago({ id });
@@ -128,4 +128,3 @@ module.exports = {
   putMetodoPago,
   deleteMetodoPago: deleteMetodoPagoHandler,
 };
-

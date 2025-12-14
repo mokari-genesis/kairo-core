@@ -15,9 +15,9 @@ const getProviders = fetchResultMysql(
       AND (? IS NULL OR direccion LIKE CONCAT('%', ?, '%'))
       AND (? IS NULL OR tipo = ?)
       ORDER BY id DESC
-    `
+    `;
 
-    const query = limit ? `${baseQuery} LIMIT ?` : baseQuery
+    const query = limit ? `${baseQuery} LIMIT ?` : baseQuery;
     const params = [
       empresa_id || null,
       empresa_id || null,
@@ -33,16 +33,16 @@ const getProviders = fetchResultMysql(
       direccion || null,
       tipo || null,
       tipo || null,
-    ]
+    ];
 
     if (limit) {
-      params.push(limit)
+      params.push(limit);
     }
 
-    return connection.execute(query, params)
+    return connection.execute(query, params);
   },
   { singleResult: false }
-)
+);
 
 const createProvider = fetchResultMysql(
   async (
@@ -56,14 +56,14 @@ const createProvider = fetchResultMysql(
       ) VALUES (?, ?, ?, ?, ?, ?, ?)
       `,
       [empresa_id, nombre, nit, email, telefono, direccion, tipo]
-    )
+    );
     const [result] = await connection.execute(
-      'SELECT * FROM proveedores WHERE id = LAST_INSERT_ID()'
-    )
-    return result
+      "SELECT * FROM proveedores WHERE id = LAST_INSERT_ID()"
+    );
+    return result;
   },
   { singleResult: true }
-)
+);
 
 const updateProvider = fetchResultMysql(
   async ({ id, nombre, nit, email, telefono, direccion, tipo }, connection) => {
@@ -79,25 +79,25 @@ const updateProvider = fetchResultMysql(
       WHERE id = ?
       `,
       [nombre, nit, email, telefono, direccion, tipo, id]
-    )
+    );
     const [result] = await connection.execute(
-      'SELECT * FROM proveedores WHERE id = ?',
+      "SELECT * FROM proveedores WHERE id = ?",
       [id]
-    )
-    return result
+    );
+    return result;
   },
   { singleResult: true }
-)
+);
 
 const deleteProvider = fetchResultMysql(
   async ({ id }, connection) => {
     const [existingRecord] = await connection.execute(
-      'SELECT * FROM proveedores WHERE id = ?',
+      "SELECT * FROM proveedores WHERE id = ?",
       [id]
-    )
+    );
 
     if (existingRecord.length === 0) {
-      throw new Error('Provider not found')
+      throw new Error("Provider not found");
     }
 
     await connection.execute(
@@ -106,12 +106,12 @@ const deleteProvider = fetchResultMysql(
       WHERE id = ?
       `,
       [id]
-    )
+    );
 
-    return existingRecord
+    return existingRecord;
   },
   { singleResult: true }
-)
+);
 
 // Handler functions
 const getProvider = async ({ request, params }) => {
@@ -143,7 +143,7 @@ const postProvider = async ({ request, params }) => {
     !telefono ||
     !email
   ) {
-    throw new Error('Missing required fields')
+    throw new Error("Missing required fields");
   }
 
   const provider = await createProvider({
@@ -162,7 +162,7 @@ const putProvider = async ({ request, params }) => {
   const { id, nombre, tipo, nit, direccion, telefono, email } = params;
 
   if (!id || !nombre || !tipo || !nit || !direccion || !telefono || !email) {
-    throw new Error('Missing required fields')
+    throw new Error("Missing required fields");
   }
 
   const provider = await updateProvider({
@@ -176,7 +176,7 @@ const putProvider = async ({ request, params }) => {
   });
 
   if (!provider) {
-    throw new Error('Provider not found')
+    throw new Error("Provider not found");
   }
 
   return provider;
@@ -186,7 +186,7 @@ const deleteProviderHandler = async ({ request, params }) => {
   const { id } = params;
 
   if (!id) {
-    throw new Error('Missing required fields')
+    throw new Error("Missing required fields");
   }
 
   await deleteProvider({ id });
@@ -199,4 +199,3 @@ module.exports = {
   putProvider,
   deleteProvider: deleteProviderHandler,
 };
-

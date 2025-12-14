@@ -33,7 +33,7 @@ const getReporteInventarioConMetodo = fetchResultMysql(
       ]
     ),
   { singleResult: false }
-)
+);
 
 const getReporteVentasConPagos = fetchResultMysql(
   ({ empresa_id, fecha_inicio, fecha_fin, estado_venta }, connection) =>
@@ -90,7 +90,7 @@ const getReporteVentasConPagos = fetchResultMysql(
       ]
     ),
   { singleResult: false }
-)
+);
 
 const getReporteMovimientosInventario = fetchResultMysql(
   (
@@ -124,7 +124,7 @@ const getReporteMovimientosInventario = fetchResultMysql(
       ]
     ),
   { singleResult: false }
-)
+);
 
 const getReporteStockActual = fetchResultMysql(
   (
@@ -169,17 +169,12 @@ const getReporteStockActual = fetchResultMysql(
       ]
     ),
   { singleResult: false }
-)
+);
 
 // Handler functions
 const getReporteInventarioConMetodoHandler = async ({ request, params }) => {
-  const {
-    empresa_id,
-    producto_id,
-    tipo_movimiento,
-    fecha_inicio,
-    fecha_fin,
-  } = params;
+  const { empresa_id, producto_id, tipo_movimiento, fecha_inicio, fecha_fin } =
+    params;
 
   const reporte = await getReporteInventarioConMetodo({
     empresa_id,
@@ -192,13 +187,8 @@ const getReporteInventarioConMetodoHandler = async ({ request, params }) => {
 };
 
 const getReporteMovimientosInventarioHandler = async ({ request, params }) => {
-  const {
-    empresa_id,
-    producto_id,
-    tipo_movimiento,
-    fecha_inicio,
-    fecha_fin,
-  } = params;
+  const { empresa_id, producto_id, tipo_movimiento, fecha_inicio, fecha_fin } =
+    params;
 
   const reporte = await getReporteMovimientosInventario({
     empresa_id,
@@ -251,4 +241,3 @@ module.exports = {
   getReporteStockActual: getReporteStockActualHandler,
   getReporteVentasConPagos: getReporteVentasConPagosHandler,
 };
-

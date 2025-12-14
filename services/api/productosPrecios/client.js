@@ -14,7 +14,7 @@ const getProductosPrecios = fetchResultMysql(
       [producto_id || null, producto_id || null, tipo || null, tipo || null]
     ),
   { singleResult: false }
-)
+);
 
 const getPreciosByProducto = fetchResultMysql(
   ({ producto_id }, connection) =>
@@ -29,7 +29,7 @@ const getPreciosByProducto = fetchResultMysql(
       [producto_id]
     ),
   { singleResult: false }
-)
+);
 
 const createProductoPrecio = fetchResultMysql(
   async ({ producto_id, tipo, precio }, connection) => {
@@ -39,7 +39,7 @@ const createProductoPrecio = fetchResultMysql(
       VALUES (?, ?, ?)
       `,
       [producto_id, tipo, precio]
-    )
+    );
     const [result] = await connection.execute(
       `
       SELECT pp.*, p.codigo as producto_codigo, p.descripcion as producto_descripcion
@@ -47,11 +47,11 @@ const createProductoPrecio = fetchResultMysql(
       LEFT JOIN productos p ON pp.producto_id = p.id
       WHERE pp.id = LAST_INSERT_ID()
       `
-    )
-    return result
+    );
+    return result;
   },
   { singleResult: true }
-)
+);
 
 const updateProductoPrecio = fetchResultMysql(
   async ({ id, precio }, connection) => {
@@ -62,7 +62,7 @@ const updateProductoPrecio = fetchResultMysql(
       WHERE id = ?
       `,
       [precio, id]
-    )
+    );
     const [result] = await connection.execute(
       `
       SELECT pp.*, p.codigo as producto_codigo, p.descripcion as producto_descripcion
@@ -71,11 +71,11 @@ const updateProductoPrecio = fetchResultMysql(
       WHERE pp.id = ?
       `,
       [id]
-    )
-    return result
+    );
+    return result;
   },
   { singleResult: true }
-)
+);
 
 const deleteProductoPrecio = fetchResultMysql(
   async ({ id }, connection) => {
@@ -87,18 +87,20 @@ const deleteProductoPrecio = fetchResultMysql(
       WHERE pp.id = ?
       `,
       [id]
-    )
+    );
 
     if (existingRecord.length === 0) {
-      throw new Error('Precio de producto no encontrado')
+      throw new Error("Precio de producto no encontrado");
     }
 
-    await connection.execute(`DELETE FROM productos_precios WHERE id = ?`, [id])
+    await connection.execute(`DELETE FROM productos_precios WHERE id = ?`, [
+      id,
+    ]);
 
-    return existingRecord
+    return existingRecord;
   },
   { singleResult: true }
-)
+);
 
 // Handler functions
 const getProductoPrecio = async ({ request, params }) => {
@@ -112,7 +114,7 @@ const getProductoPrecioByProducto = async ({ request, params }) => {
   const { producto_id } = params;
 
   if (!producto_id) {
-    throw new Error('Missing required fields: producto_id is required')
+    throw new Error("Missing required fields: producto_id is required");
   }
 
   const precios = await getPreciosByProducto({ producto_id });
@@ -124,8 +126,8 @@ const postProductoPrecio = async ({ request, params }) => {
 
   if (!producto_id || !tipo || precio === undefined) {
     throw new Error(
-      'Missing required fields: producto_id, tipo, and precio are required'
-    )
+      "Missing required fields: producto_id, tipo, and precio are required"
+    );
   }
 
   const productoPrecio = await createProductoPrecio({
@@ -140,7 +142,7 @@ const putProductoPrecio = async ({ request, params }) => {
   const { id, precio } = params;
 
   if (!id || precio === undefined) {
-    throw new Error('Missing required fields: id and precio are required')
+    throw new Error("Missing required fields: id and precio are required");
   }
 
   const productoPrecio = await updateProductoPrecio({
@@ -149,7 +151,7 @@ const putProductoPrecio = async ({ request, params }) => {
   });
 
   if (productoPrecio && productoPrecio.length === 0) {
-    throw new Error('Precio de producto no encontrado')
+    throw new Error("Precio de producto no encontrado");
   }
 
   return productoPrecio;
@@ -159,7 +161,7 @@ const deleteProductoPrecioHandler = async ({ request, params }) => {
   const { id } = params;
 
   if (!id) {
-    throw new Error('Missing required fields: id is required')
+    throw new Error("Missing required fields: id is required");
   }
 
   await deleteProductoPrecio({ id });
@@ -173,4 +175,3 @@ module.exports = {
   putProductoPrecio,
   deleteProductoPrecio: deleteProductoPrecioHandler,
 };
-

@@ -6,6 +6,10 @@ custom:
   defaultNodePath: "../../layers/nodejs/node_modules"
   nodePathLib: "../layers/nodejs/node_modules"
 
+  serverless-offline:
+    httpPort: 3000
+    noPrependStageInUrl: true
+
   localhost:
     environment:
       NODE_PATH: ${self:custom.nodePathLib}:${self:custom.defaultNodePath}:../..:.
@@ -18,15 +22,11 @@ custom:
       other: "dev" # anything else
     current: ${self:custom.stages.secrets.${opt:stage}, self:custom.stages.secrets.other}
 
-  config: ../../envs/credentials.${self:custom.stages.current}.json
-  apisecret: ${file(${self:custom.config})}
+  apisecret: ${ssm:/aws/reference/secretsmanager/${self:custom.stages.current}/kairo/core}  
 
 provider:
   name: aws
   runtime: nodejs20.x
-  nodeOptions:
-    # Required to enable fetch on node 18.
-    - --enable-undici
   versionFunctions: true
   stage: ${opt:stage}
   region: us-east-1
@@ -83,5 +83,5 @@ functions:
               - app_id
               - device_id
     layers:
-      - ${self:custom.apisecret.LAYERS}
+      - arn:${self:custom.apisecret.LAYERS}
 
