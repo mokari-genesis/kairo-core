@@ -13,7 +13,7 @@ const productosPrecios = require("./productosPrecios/client");
 module.exports.router = () => {
   const routes = [
     {
-      proxy: "clients",
+      proxy: "core",
       routes: [
         {
           path: "clientes",
@@ -39,11 +39,7 @@ module.exports.router = () => {
           handler: clients.deleteClient,
           public: false,
         },
-      ],
-    },
-    {
-      proxy: "enterprise",
-      routes: [
+        //empresas
         {
           path: "empresas",
           method: "GET",
@@ -68,93 +64,82 @@ module.exports.router = () => {
           handler: enterprise.deleteEnterprise,
           public: false,
         },
-      ],
-    },
-    {
-      proxy: "products",
-      routes: [
+        //products // products
         {
-          path: "productos",
+          path: "products",
           method: "GET",
           handler: products.getProduct,
           public: false,
         },
         {
-          path: "productos",
+          path: "products",
           method: "POST",
           handler: products.postProduct,
           public: false,
         },
         {
-          path: "productos",
+          path: "products",
           method: "PUT",
           handler: products.putProduct,
           public: false,
         },
         {
-          path: "productos",
+          path: "products",
           method: "DELETE",
           handler: products.deleteProduct,
           public: false,
         },
+        //productos-precios
+        // {
+        //   path: "productos-precios",
+        //   method: "GET",
+        //   handler: products.getPrecio,
+        //   public: false,
+        // },
+        // {
+        //   path: "productos-precios",
+        //   method: "POST",
+        //   handler: products.postPrecio,
+        //   public: false,
+        // },
+        // {
+        //   path: "productos-precios",
+        //   method: "PUT",
+        //   handler: products.putPrecio,
+        //   public: false,
+        // },
+        // {
+        //   path: "productos-precios",
+        //   method: "DELETE",
+        //   handler: products.deletePrecio,
+        //   public: false,
+        // },
+        //inventoryMovement // inventory movements
         {
-          path: "productos/precios",
-          method: "GET",
-          handler: products.getPrecio,
-          public: false,
-        },
-        {
-          path: "productos/precios",
-          method: "POST",
-          handler: products.postPrecio,
-          public: false,
-        },
-        {
-          path: "productos/precios",
-          method: "PUT",
-          handler: products.putPrecio,
-          public: false,
-        },
-        {
-          path: "productos/precios",
-          method: "DELETE",
-          handler: products.deletePrecio,
-          public: false,
-        },
-      ],
-    },
-    {
-      proxy: "inventoryMovement",
-      routes: [
-        {
-          path: "movimientos",
+          path: "inventory-movement",
           method: "GET",
           handler: inventoryMovement.getInventoryMovement,
           public: false,
         },
         {
-          path: "movimientos",
+          path: "inventory-movement",
           method: "POST",
           handler: inventoryMovement.postInventoryMovement,
           public: false,
         },
         {
-          path: "movimientos",
+          path: "inventory-movement",
           method: "PUT",
           handler: inventoryMovement.putInventoryMovement,
           public: false,
         },
         {
-          path: "movimientos",
+          path: "inventory-movement",
           method: "DELETE",
           handler: inventoryMovement.deleteInventoryMovement,
           public: false,
         },
-      ],
-    },
-    {
-      proxy: "metodosPago",
-      routes: [
+        //metodos-pago
         {
           path: "metodos-pago",
           method: "GET",
@@ -179,11 +164,7 @@ module.exports.router = () => {
           handler: metodosPago.deleteMetodoPago,
           public: false,
         },
-      ],
-    },
-    {
-      proxy: "monedas",
-      routes: [
+        //monedas
         {
           path: "monedas",
           method: "GET",
@@ -208,117 +189,105 @@ module.exports.router = () => {
           handler: monedas.deleteMoneda,
           public: false,
         },
-      ],
-    },
-    {
-      proxy: "provider",
-      routes: [
+        //provider // suppliers
         {
-          path: "proveedores",
+          path: "provider",
           method: "GET",
           handler: provider.getProvider,
           public: false,
         },
         {
-          path: "proveedores",
+          path: "provider",
           method: "POST",
           handler: provider.postProvider,
           public: false,
         },
         {
-          path: "proveedores",
+          path: "provider",
           method: "PUT",
           handler: provider.putProvider,
           public: false,
         },
         {
-          path: "proveedores",
+          path: "provider",
           method: "DELETE",
           handler: provider.deleteProvider,
           public: false,
         },
-      ],
-    },
-    {
-      proxy: "purchase",
-      routes: [
+        //purchase // sales
         {
-          path: "ventas",
+          path: "purchase",
           method: "GET",
           handler: purchase.getPurchase,
           public: false,
         },
         {
-          path: "ventas/flat",
+          path: "purchase/flat",
           method: "GET",
           handler: purchase.getPurchaseFlat,
           public: false,
         },
         {
-          path: "ventas",
+          path: "purchase",
           method: "POST",
           handler: purchase.postPurchase,
           public: false,
         },
         {
-          path: "ventas",
+          path: "purchase",
           method: "PUT",
           handler: purchase.putPurchase,
           public: false,
         },
         {
-          path: "ventas/cancel",
-          method: "POST",
+          path: "purchase",
+          method: "DELETE",
           handler: purchase.cancelPurchase,
           public: false,
         },
         {
-          path: "ventas/status",
+          path: "purchase/status",
           method: "PUT",
           handler: purchase.updatePurchaseStatus,
           public: false,
         },
         {
-          path: "ventas/update",
+          path: "purchase/sale",
           method: "PUT",
           handler: purchase.updateSale,
           public: false,
         },
         {
-          path: "ventas/remove",
+          path: "purchase/sale",
           method: "DELETE",
           handler: purchase.removeSale,
           public: false,
         },
         {
-          path: "ventas/:ventaId/pagos",
+          path: "purchase/:ventaId/payments",
           method: "GET",
           handler: purchase.listPayments,
           public: false,
         },
         {
-          path: "ventas/:ventaId/pagos",
+          path: "purchase/:ventaId/payments",
           method: "POST",
           handler: purchase.createPayment,
           public: false,
         },
         {
-          path: "ventas/:ventaId/pagos/:paymentId",
+          path: "purchase/:ventaId/payments/:paymentId",
           method: "PUT",
           handler: purchase.updatePayment,
           public: false,
         },
         {
-          path: "ventas/:ventaId/pagos/:paymentId",
+          path: "purchase/:ventaId/payments/:paymentId",
           method: "DELETE",
           handler: purchase.deletePayment,
           public: false,
         },
-      ],
-    },
-    {
-      proxy: "reportes",
-      routes: [
+        //reportes
         {
           path: "inventario-con-metodo",
           method: "GET",
@@ -343,11 +312,7 @@ module.exports.router = () => {
           handler: reportes.getReporteVentasConPagos,
           public: false,
         },
-      ],
-    },
-    {
-      proxy: "metodosPagoUnificado",
-      routes: [
+        // /metodos-pago-unificado
         {
           path: "metodos-pago-unificado",
           method: "GET",
@@ -360,37 +325,33 @@ module.exports.router = () => {
           handler: metodosPagoUnificado.getMetodosPagoUnificadoResumen,
           public: false,
         },
-      ],
-    },
-    {
-      proxy: "productosPrecios",
-      routes: [
+        //productos-precios
         {
-          path: "precios",
+          path: "productos-precios",
           method: "GET",
           handler: productosPrecios.getProductoPrecio,
           public: false,
         },
         {
-          path: "precios/:producto_id",
+          path: "productos-precios/producto/:producto_id",
           method: "GET",
           handler: productosPrecios.getProductoPrecioByProducto,
           public: false,
         },
         {
-          path: "precios",
+          path: "productos-precios",
           method: "POST",
           handler: productosPrecios.postProductoPrecio,
           public: false,
         },
         {
-          path: "precios",
+          path: "productos-precios",
           method: "PUT",
           handler: productosPrecios.putProductoPrecio,
           public: false,
         },
         {
-          path: "precios",
+          path: "productos-precios",
           method: "DELETE",
           handler: productosPrecios.deleteProductoPrecio,
           public: false,
