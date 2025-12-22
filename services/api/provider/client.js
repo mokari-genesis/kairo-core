@@ -1,14 +1,10 @@
 const { fetchResultMysql } = require("libs/db");
 
 const getProviders = fetchResultMysql(
-  (
-    { nombre, nit, direccion, telefono, email, tipo, empresa_id, limit },
-    connection
-  ) => {
+  ({ nombre, nit, direccion, telefono, email, tipo, limit }, connection) => {
     const baseQuery = `
       SELECT * FROM proveedores 
-      WHERE (? IS NULL OR empresa_id = ?)
-      AND (? IS NULL OR nombre LIKE CONCAT('%', ?, '%'))
+      WHERE (? IS NULL OR nombre LIKE CONCAT('%', ?, '%'))
       AND (? IS NULL OR nit LIKE CONCAT('%', ?, '%'))
       AND (? IS NULL OR email LIKE CONCAT('%', ?, '%'))
       AND (? IS NULL OR telefono LIKE CONCAT('%', ?, '%'))
@@ -19,8 +15,6 @@ const getProviders = fetchResultMysql(
 
     const query = limit ? `${baseQuery} LIMIT ?` : baseQuery;
     const params = [
-      empresa_id || null,
-      empresa_id || null,
       nombre || null,
       nombre || null,
       nit || null,
@@ -45,17 +39,14 @@ const getProviders = fetchResultMysql(
 );
 
 const createProvider = fetchResultMysql(
-  async (
-    { empresa_id, nombre, nit, email, telefono, direccion, tipo },
-    connection
-  ) => {
+  async ({ nombre, nit, email, telefono, direccion, tipo }, connection) => {
     await connection.execute(
       `
       INSERT INTO proveedores (
-        empresa_id, nombre, nit, email, telefono, direccion, tipo
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        nombre, nit, email, telefono, direccion, tipo
+      ) VALUES (?, ?, ?, ?, ?, ?)
       `,
-      [empresa_id, nombre, nit, email, telefono, direccion, tipo]
+      [nombre, nit, email, telefono, direccion, tipo]
     );
     const [result] = await connection.execute(
       "SELECT * FROM proveedores WHERE id = LAST_INSERT_ID()"
@@ -115,8 +106,7 @@ const deleteProvider = fetchResultMysql(
 
 // Handler functions
 const getProvider = async ({ request, params }) => {
-  const { nombre, nit, direccion, telefono, email, tipo, empresa_id, limit } =
-    params;
+  const { nombre, nit, direccion, telefono, email, tipo, limit } = params;
 
   const providers = await getProviders({
     nombre,
@@ -125,29 +115,19 @@ const getProvider = async ({ request, params }) => {
     telefono,
     email,
     tipo,
-    empresa_id,
     limit,
   });
   return providers;
 };
 
 const postProvider = async ({ request, params }) => {
-  const { empresa_id, nombre, tipo, nit, email, telefono, direccion } = params;
+  const { nombre, tipo, nit, email, telefono, direccion } = params;
 
-  if (
-    !empresa_id ||
-    !nombre ||
-    !tipo ||
-    !nit ||
-    !direccion ||
-    !telefono ||
-    !email
-  ) {
+  if (!nombre || !tipo || !nit || !direccion || !telefono || !email) {
     throw new Error("Missing required fields");
   }
 
   const provider = await createProvider({
-    empresa_id,
     nombre,
     tipo,
     nit,

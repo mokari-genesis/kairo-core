@@ -101,7 +101,7 @@ const postEnterprise = async ({ request, params }) => {
   const { nombre, nit, direccion, telefono, email } = params;
 
   if (!nombre || !nit || !direccion || !telefono || !email) {
-    throw new Error("Missing required fields");
+    throw new Error("Missing required fields.");
   }
 
   const empresa = await createEmpresa({

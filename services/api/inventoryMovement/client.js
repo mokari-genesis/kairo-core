@@ -1,4 +1,4 @@
-const { fetchResultMysql } = require("libs/db");
+const { fetchResultMysql, transaction } = require("libs/db");
 
 const getInventoryMovements = fetchResultMysql(
   (
@@ -52,72 +52,130 @@ const getInventoryMovements = fetchResultMysql(
   { singleResult: false }
 );
 
-const createInventoryMovement = fetchResultMysql(
+const createInventoryMovementInternal = async (
+  {
+    empresa_id,
+    product_id,
+    user_id,
+    movement_type,
+    quantity,
+    comment,
+    precio_compra,
+    compra_id,
+    transferencia_id,
+  },
+  connection
+) => {
+  // Validar precio_compra para movimientos tipo entrada que NO sean transferencias
+  // Las transferencias no requieren precio_compra porque el producto ya fue adquirido
+  // en la sucursal origen y solo se está trasladando a otra sucursal
+  if (movement_type === "entrada" && !transferencia_id) {
+    if (
+      precio_compra === undefined ||
+      precio_compra === null ||
+      precio_compra < 0
+    ) {
+      throw new Error(
+        "Para movimientos tipo entrada (compra), precio_compra es requerido y debe ser >= 0."
+      );
+    }
+  }
+
+  await connection.execute(
+    `
+    INSERT INTO movimientos_inventario (
+      empresa_id,
+      producto_id,
+      usuario_id,
+      tipo_movimiento,
+      cantidad,
+      precio_compra,
+      compra_id,
+      comentario
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    [
+      empresa_id || null,
+      product_id,
+      user_id || null,
+      movement_type,
+      quantity,
+      precio_compra || null,
+      compra_id || null,
+      comment || null,
+    ]
+  );
+
+  const [result] = await connection.execute(
+    "SELECT * FROM movimientos_inventario WHERE id = LAST_INSERT_ID()"
+  );
+
+  return result[0];
+};
+
+const createInventoryMovement = transaction(createInventoryMovementInternal);
+
+const deleteInventoryMovement = transaction(async ({ id }, connection) => {
+  const [existing] = await connection.execute(
+    "SELECT * FROM movimientos_inventario WHERE id = ?",
+    [id]
+  );
+
+  if (!existing || existing.length === 0) {
+    throw new Error("Inventory movement not found");
+  }
+
+  await connection.execute("DELETE FROM movimientos_inventario WHERE id = ?", [
+    id,
+  ]);
+
+  return existing[0];
+});
+
+const updateInventoryMovement = transaction(
   async (
-    { empresa_id, product_id, user_id, movement_type, quantity, comment },
+    { id, empresa_id, product_id, movement_type, quantity, comment },
     connection
   ) => {
-    await connection.execute(
-      `
-      INSERT INTO movimientos_inventario (
-        empresa_id, producto_id, usuario_id, tipo_movimiento, cantidad, comentario
-      ) VALUES (?, ?, ?, ?, ?, ?)
-      `,
-      [empresa_id, product_id, user_id, movement_type, quantity, comment]
-    );
-    const [result] = await connection.execute(
-      "SELECT * FROM movimientos_inventario WHERE id = LAST_INSERT_ID()"
-    );
-    return result;
-  },
-  { singleResult: true }
-);
-
-const deleteInventoryMovement = fetchResultMysql(
-  async ({ id }, connection) => {
-    const [existingRecord] = await connection.execute(
+    const [existing] = await connection.execute(
       "SELECT * FROM movimientos_inventario WHERE id = ?",
       [id]
     );
 
-    if (existingRecord.length === 0) {
-      throw new Error("Inventory movement not found");
+    if (!existing || existing.length === 0) {
+      throw new Error("Movimiento no encontrado");
     }
 
-    await connection.execute(
-      `
-      DELETE FROM movimientos_inventario
-      WHERE id = ?
-      `,
-      [id]
-    );
+    const movimientoAnterior = existing[0];
+    const empresaIdFinal = empresa_id || movimientoAnterior.empresa_id;
 
-    return existingRecord;
-  },
-  { singleResult: true }
-);
-
-const updateInventoryMovement = fetchResultMysql(
-  async ({ id, product_id, movement_type, quantity, comment }, connection) => {
     await connection.execute(
       `
       UPDATE movimientos_inventario
-      SET producto_id = ?,
+      SET empresa_id = ?,
+          producto_id = ?,
           tipo_movimiento = ?,
           cantidad = ?,
-          comentario = ?,
-          fecha = NOW()
+          comentario = ?
       WHERE id = ?
       `,
-      [product_id, movement_type, quantity, comment, id]
+      [
+        empresaIdFinal || null,
+        product_id,
+        movement_type,
+        quantity,
+        comment || null,
+        id,
+      ]
     );
-    const [result] = await connection.execute(
+
+    const [updated] = await connection.execute(
       "SELECT * FROM movimientos_inventario WHERE id = ?",
       [id]
     );
-    return result;
-  },
-  { singleResult: true }
+
+    return updated[0];
+  }
 );
 
 // Handler functions
@@ -147,8 +205,16 @@ const getInventoryMovement = async ({ request, params }) => {
 };
 
 const postInventoryMovement = async ({ request, params }) => {
-  const { empresa_id, product_id, user_id, movement_type, quantity, comment } =
-    params;
+  const {
+    empresa_id,
+    product_id,
+    user_id,
+    movement_type,
+    quantity,
+    comment,
+    precio_compra,
+    compra_id,
+  } = params;
 
   if (
     !empresa_id ||
@@ -168,12 +234,16 @@ const postInventoryMovement = async ({ request, params }) => {
     movement_type,
     quantity,
     comment,
+    precio_compra:
+      precio_compra !== undefined ? parseFloat(precio_compra) : null,
+    compra_id: compra_id !== undefined ? parseInt(compra_id) : null,
   });
   return movement;
 };
 
 const putInventoryMovement = async ({ request, params }) => {
-  const { id, product_id, movement_type, quantity, comment } = params;
+  const { id, empresa_id, product_id, movement_type, quantity, comment } =
+    params;
 
   if (!id || !product_id || !movement_type || !quantity || !comment) {
     throw new Error("Missing required fields");
@@ -181,6 +251,7 @@ const putInventoryMovement = async ({ request, params }) => {
 
   const movement = await updateInventoryMovement({
     id,
+    empresa_id,
     product_id,
     movement_type,
     quantity,

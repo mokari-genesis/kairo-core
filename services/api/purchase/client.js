@@ -92,56 +92,40 @@ const postPurchase = async ({ request, params }) => {
     !estado ||
     !detalle
   ) {
-    throw new Error('Missing required fields')
+    throw new Error("Missing required fields");
   }
 
-  // Validar que si el estado es 'vendido', se requieren pagos
-  if (estado === 'vendido') {
-    if (!pagos || pagos.length === 0) {
-      throw new Error(
-        'Para ventas en estado "vendido" se requiere al menos un pago'
-      )
-    }
-
+  // Validar pagos si se proporcionan (pero no son obligatorios)
+  if (pagos && pagos.length > 0) {
     for (const pago of pagos) {
       if (!pago.metodo_pago_id || !pago.moneda_id) {
-        throw new Error('Cada pago debe tener metodo_pago_id y moneda_id')
+        throw new Error("Cada pago debe tener metodo_pago_id y moneda_id");
       }
     }
 
     const totalPagos = pagos.reduce(
       (sum, pago) => sum + Number(pago.monto_en_moneda_venta),
       0
-    )
-    if (Math.abs(totalPagos - Number(total)) > 0.01) {
-      throw new Error('La suma de pagos debe ser igual al total de la venta')
+    );
+    if (totalPagos > Number(total) + 0.01) {
+      throw new Error("La suma de pagos no puede exceder el total de la venta");
     }
   }
 
-  // Validar cada producto
-  for (const item of detalle) {
-    const result = await storage.verificarStockDisponible({
-      producto_id: item.producto_id,
-    })
+  // La validación de stock y estado de producto ahora la realiza la BD
+  // (checks/triggers). El backend solo registra la venta.
 
-    if (!result) {
-      throw new Error(`Producto ${item.producto_descripcion} no encontrado.`)
-    }
-
-    const { stock, estado: estadoProducto } = result
-
-    if (estadoProducto !== 'activo') {
-      throw new Error(`Producto ${item.producto_descripcion} está inactivo.`)
-    }
-
-    if (item.cantidad > stock) {
-      throw new Error(
-        `Stock insuficiente para el producto ${item.producto_descripcion}. Disponible: ${stock}, solicitado: ${item.cantidad}`
-      )
-    }
+  // Validar que los productos no estén en transferencias en estado borrador
+  // Esta validación se hace antes de crear la venta
+  if (detalle && detalle.length > 0) {
+    const producto_ids = detalle.map((d) => d.producto_id);
+    await storage.validateProductosNoEnTransferenciasBorrador({
+      producto_ids,
+      empresa_id,
+    });
   }
 
-  // Crear la venta
+  // Crear la venta con detalles para generar movimientos (vía triggers)
   const venta = await storage.createVenta({
     empresa_id,
     cliente_id,
@@ -149,7 +133,8 @@ const postPurchase = async ({ request, params }) => {
     total,
     estado,
     comentario: comentario || null,
-  })
+    detalles: estado === "vendido" ? detalle : [],
+  });
 
   // Insertar detalles
   for (const item of detalle) {
@@ -160,119 +145,116 @@ const postPurchase = async ({ request, params }) => {
       precio_unitario: item.precio_unitario,
       subtotal: item.subtotal,
       tipo_precio_aplicado: item.tipo_precio_aplicado,
-    })
+    });
   }
 
   // Crear pagos si existen
-  let pagosCreados = []
+  let pagosCreados = [];
   if (pagos && pagos.length > 0) {
     pagosCreados = await storage.createVentaPayments({
       venta_id: venta.id,
       pagos: pagos,
-    })
+    });
+    // updateEstadoPago ya se llama dentro de createVentaPayments
   }
 
   // Obtener venta con información de pagos
-  const ventaCompleta = await storage.getVentaWithPayments({ ventaId: venta.id })
-  const pagosList = await storage.getVentaPayments({ ventaId: venta.id })
+  const ventaCompleta = await storage.getVentaWithPayments({
+    ventaId: venta.id,
+  });
+  const pagosList = await storage.getVentaPayments({ ventaId: venta.id });
 
   return {
     ...ventaCompleta,
     pagos: pagosList,
-  }
+  };
 };
 
 const putPurchase = async ({ request, params }) => {
-  const {
-    venta_id,
-    estado,
-    pagos,
-  } = params;
+  const { venta_id, estado, pagos } = params;
 
   if (!venta_id || !estado) {
-    throw new Error('Missing required fields')
+    throw new Error("Missing required fields");
   }
 
-  if (estado !== 'vendido') {
-    throw new Error('Estado no válido')
+  if (estado !== "vendido") {
+    throw new Error("Estado no válido");
   }
 
-  if (estado === 'vendido') {
-    if (!pagos || pagos.length === 0) {
-      throw new Error(
-        'Para ventas en estado "vendido" se requiere al menos un pago'
-      )
-    }
-
+  // Validar pagos si se proporcionan (pero no son obligatorios)
+  if (pagos && pagos.length > 0) {
     for (const pago of pagos) {
       if (!pago.metodo_pago_id || !pago.moneda_id) {
-        throw new Error('Cada pago debe tener metodo_pago_id y moneda_id')
+        throw new Error("Cada pago debe tener metodo_pago_id y moneda_id");
       }
     }
 
-    const ventaActual = await storage.getVentaById({ venta_id })
+    const ventaActual = await storage.getVentaById({ venta_id });
     if (!ventaActual) {
-      throw new Error('Venta no encontrada')
+      throw new Error("Venta no encontrada");
     }
 
     const totalPagos = pagos.reduce(
       (sum, pago) => sum + Number(pago.monto_en_moneda_venta),
       0
-    )
-    if (Math.abs(totalPagos - Number(ventaActual.total)) > 0.01) {
-      throw new Error('La suma de pagos debe ser igual al total de la venta')
+    );
+    if (totalPagos > Number(ventaActual.total) + 0.01) {
+      throw new Error("La suma de pagos no puede exceder el total de la venta");
     }
   }
 
-  const ventaActual = await storage.getVentaById({ venta_id })
+  const ventaActual = await storage.getVentaById({ venta_id });
   if (!ventaActual) {
-    throw new Error('Venta no encontrada')
+    throw new Error("Venta no encontrada");
   }
 
   const nuevaVenta = await storage.updateVenta({
     venta_id,
     estado,
-  })
+  });
 
   await storage.copiarDetallesVenta({
     venta_id_original: venta_id,
     venta_id_nueva: nuevaVenta.id,
-  })
+  });
 
   if (pagos && pagos.length > 0) {
     await storage.createVentaPayments({
       venta_id: nuevaVenta.id,
       pagos: pagos,
-    })
+    });
+    // updateEstadoPago ya se llama dentro de createVentaPayments
   }
 
-  await storage.deleteVenta({ venta_id })
+  await storage.deleteVenta({ venta_id });
 
-  const ventaCompleta = await storage.getVentaWithPayments({ ventaId: nuevaVenta.id })
-  const pagosList = await storage.getVentaPayments({ ventaId: nuevaVenta.id })
+  const ventaCompleta = await storage.getVentaWithPayments({
+    ventaId: nuevaVenta.id,
+  });
+  const pagosList = await storage.getVentaPayments({ ventaId: nuevaVenta.id });
 
   return {
     ...ventaCompleta,
     pagos: pagosList,
-  }
+  };
 };
 
 const cancelPurchase = async ({ request, params }) => {
   const { venta_id } = params;
 
   if (!venta_id) {
-    throw new Error('Missing required fields')
+    throw new Error("Missing required fields");
   }
 
-  const venta = await storage.getVentaById({ venta_id })
+  const venta = await storage.getVentaById({ venta_id });
 
-  if (!venta || venta.estado === 'cancelado') {
-    throw new Error('La venta no existe o ya está cancelada')
+  if (!venta || venta.estado === "cancelado") {
+    throw new Error("La venta no existe o ya está cancelada");
   }
 
-  const detalles = await storage.getDetallesVentaByVentaId({ venta_id })
+  const detalles = await storage.getDetallesVentaByVentaId({ venta_id });
 
-  await storage.cancelarVenta({ venta_id })
+  await storage.cancelarVenta({ venta_id });
 
   for (const detalle of detalles) {
     await storage.crearMovimientoDevolucion({
@@ -282,21 +264,21 @@ const cancelPurchase = async ({ request, params }) => {
       cantidad: detalle.cantidad,
       comentario: `Devolución al stock de productos por cancelación de venta`,
       referencia: venta_id,
-    })
+    });
   }
 
-  return { venta_id }
+  return { venta_id };
 };
 
 const updatePurchaseStatus = async ({ request, params }) => {
   const { venta_id, estado } = params;
 
   if (!venta_id || !estado) {
-    throw new Error('Missing required fields')
+    throw new Error("Missing required fields");
   }
 
-  const venta = await storage.updateVentaStatus({ venta_id, estado })
-  return venta
+  const venta = await storage.updateVentaStatus({ venta_id, estado });
+  return venta;
 };
 
 const updateSale = async ({ request, params }) => {
@@ -321,39 +303,34 @@ const updateSale = async ({ request, params }) => {
     !estado ||
     !detalle
   ) {
-    throw new Error('Missing required fields')
+    throw new Error("Missing required fields");
   }
 
-  if (estado === 'vendido') {
-    if (!pagos || pagos.length === 0) {
-      throw new Error(
-        'Para ventas en estado "vendido" se requiere al menos un pago'
-      )
-    }
-
+  // Validar pagos si se proporcionan (pero no son obligatorios)
+  if (pagos && pagos.length > 0) {
     for (const pago of pagos) {
       if (!pago.metodo_pago_id || !pago.moneda_id) {
-        throw new Error('Cada pago debe tener metodo_pago_id y moneda_id')
+        throw new Error("Cada pago debe tener metodo_pago_id y moneda_id");
       }
     }
 
     const totalPagos = pagos.reduce(
       (sum, pago) => sum + Number(pago.monto_en_moneda_venta),
       0
-    )
-    if (Math.abs(totalPagos - Number(total)) > 0.01) {
-      throw new Error('La suma de pagos debe ser igual al total de la venta')
+    );
+    if (totalPagos > Number(total) + 0.01) {
+      throw new Error("La suma de pagos no puede exceder el total de la venta");
     }
   }
 
-  const existingVenta = await storage.getVentaById({ venta_id })
+  const existingVenta = await storage.getVentaById({ venta_id });
   if (!existingVenta) {
-    throw new Error('Venta no encontrada')
+    throw new Error("Venta no encontrada");
   }
 
-  const detalles = await storage.getDetallesVentaByVentaId({ venta_id })
+  const detalles = await storage.getDetallesVentaByVentaId({ venta_id });
 
-  await storage.cancelarVenta({ venta_id })
+  await storage.cancelarVenta({ venta_id });
 
   for (const detalle of detalles) {
     await storage.crearMovimientoDevolucion({
@@ -363,32 +340,21 @@ const updateSale = async ({ request, params }) => {
       cantidad: detalle.cantidad,
       comentario: `Devolución al stock de productos, se edito la informacion de la Venta`,
       referencia: venta_id,
-    })
+    });
   }
 
-  for (const item of detalle) {
-    const result = await storage.verificarStockDisponible({
-      producto_id: item.producto_id,
-    })
+  // La validación de stock pasa a la base de datos (triggers/constraints).
 
-    if (!result) {
-      throw new Error(`Producto ${item.producto_descripcion} no encontrado.`)
-    }
-
-    const { stock, estado: estadoProducto } = result
-
-    if (estadoProducto !== 'activo') {
-      throw new Error(`Producto ${item.producto_descripcion} está inactivo.`)
-    }
-
-    if (item.cantidad > stock) {
-      throw new Error(
-        `Stock insuficiente para el producto ${item.producto_descripcion}. Disponible: ${stock}, solicitado: ${item.cantidad}`
-      )
-    }
+  // Validar que los productos no estén en transferencias en estado borrador
+  if (detalle && detalle.length > 0) {
+    const producto_ids = detalle.map((d) => d.producto_id);
+    await storage.validateProductosNoEnTransferenciasBorrador({
+      producto_ids,
+      empresa_id,
+    });
   }
 
-  await storage.deleteVenta({ venta_id })
+  await storage.deleteVenta({ venta_id });
 
   const venta = await storage.createVenta({
     empresa_id,
@@ -397,7 +363,8 @@ const updateSale = async ({ request, params }) => {
     total,
     estado,
     comentario: comentario || null,
-  })
+    detalles: estado === "vendido" ? detalle : [],
+  });
 
   for (const item of detalle) {
     await storage.createDetalleVenta({
@@ -407,36 +374,39 @@ const updateSale = async ({ request, params }) => {
       precio_unitario: item.precio_unitario,
       subtotal: item.subtotal,
       tipo_precio_aplicado: item.tipo_precio_aplicado,
-    })
+    });
   }
 
   if (pagos && pagos.length > 0) {
     await storage.createVentaPayments({
       venta_id: venta.id,
       pagos: pagos,
-    })
+    });
+    // updateEstadoPago ya se llama dentro de createVentaPayments
   }
 
-  const ventaCompleta = await storage.getVentaWithPayments({ ventaId: venta.id })
-  const pagosList = await storage.getVentaPayments({ ventaId: venta.id })
+  const ventaCompleta = await storage.getVentaWithPayments({
+    ventaId: venta.id,
+  });
+  const pagosList = await storage.getVentaPayments({ ventaId: venta.id });
 
   return {
     ...ventaCompleta,
     pagos: pagosList,
-  }
+  };
 };
 
 const removeSale = async ({ request, params }) => {
   const { venta_id } = params;
 
   if (!venta_id) {
-    throw new Error('Missing required fields')
+    throw new Error("Missing required fields");
   }
 
-  const venta = await storage.getVentaById({ venta_id })
+  const venta = await storage.getVentaById({ venta_id });
 
-  if (!venta || venta.estado !== 'cancelado') {
-    const detalles = await storage.getDetallesVentaByVentaId({ venta_id })
+  if (!venta || venta.estado !== "cancelado") {
+    const detalles = await storage.getDetallesVentaByVentaId({ venta_id });
 
     for (const detalle of detalles) {
       await storage.crearMovimientoDevolucion({
@@ -446,84 +416,120 @@ const removeSale = async ({ request, params }) => {
         cantidad: detalle.cantidad,
         comentario: `Devolución al stock de productos por eliminacion de la venta`,
         referencia: venta_id,
-      })
+      });
     }
   }
 
-  await storage.deleteVenta({ venta_id })
-  return { success: true }
+  await storage.deleteVenta({ venta_id });
+  return { success: true };
 };
 
 // Payment handlers
 const createPayment = async ({ request, params }) => {
-  const { ventaId, metodo_pago_id, moneda_id, monto, referencia_pago, referencia } = params;
+  const {
+    ventaId,
+    metodo_pago_id,
+    moneda_id,
+    monto,
+    referencia_pago,
+    referencia,
+    monto_en_moneda_venta,
+    tasa_cambio,
+  } = params;
 
   if (!ventaId || !metodo_pago_id || !moneda_id || monto == null) {
-    throw new Error('Missing required fields')
+    throw new Error("Missing required fields");
   }
 
-  const { total } = await storage.getVentaByIdWithPayments({ ventaId })
-  const pagado = await storage.sumPagosByVenta({ ventaId })
-  if (Number(pagado) + Number(monto) > Number(total)) {
-    throw new Error('La suma de pagos excede el total de la venta')
+  const { total } = await storage.getVentaByIdWithPayments({ ventaId });
+  const pagado = await storage.sumPagosByVenta({ ventaId });
+
+  // Calcular monto_en_moneda_venta si no se proporciona (simplificado: asumimos misma moneda)
+  const montoConvertido = monto_en_moneda_venta || monto;
+
+  if (Number(pagado) + Number(montoConvertido) > Number(total) + 0.01) {
+    throw new Error("La suma de pagos excede el total de la venta");
   }
 
-  const _ref = referencia ?? referencia_pago ?? null
+  const _ref = referencia ?? referencia_pago ?? null;
   const pago = await storage.createVentaPayment({
     venta_id: ventaId,
     metodo_pago_id,
     moneda_id,
     monto,
+    monto_en_moneda_venta: montoConvertido,
+    tasa_cambio: tasa_cambio || null,
     referencia_pago: _ref,
-  })
-  return pago
+  });
+  // updateEstadoPago ya se llama dentro de createVentaPayment
+  return pago;
 };
 
 const listPayments = async ({ request, params }) => {
   const { ventaId } = params;
-  if (!ventaId) throw new Error('Missing ventaId')
-  const pagos = await storage.getVentaPayments({ ventaId })
-  const pagosCompat = pagos.map(p => ({
+  if (!ventaId) throw new Error("Missing ventaId");
+  const pagos = await storage.getVentaPayments({ ventaId });
+  const pagosCompat = pagos.map((p) => ({
     ...p,
     referencia_pago: p.referencia,
-  }))
-  return pagosCompat
+  }));
+  return pagosCompat;
 };
 
 const updatePayment = async ({ request, params }) => {
-  const { ventaId, paymentId, metodo_pago_id, moneda_id, monto, referencia_pago, referencia } = params;
+  const {
+    ventaId,
+    paymentId,
+    metodo_pago_id,
+    moneda_id,
+    monto,
+    referencia_pago,
+    referencia,
+    monto_en_moneda_venta,
+    tasa_cambio,
+  } = params;
 
-  if (!ventaId || !paymentId) throw new Error('Missing ventaId/paymentId')
+  if (!ventaId || !paymentId) throw new Error("Missing ventaId/paymentId");
 
-  const { total } = await storage.getVentaByIdWithPayments({ ventaId })
+  const { total } = await storage.getVentaByIdWithPayments({ ventaId });
   const pagadoSinEste = await storage.sumPagosByVenta({
     ventaId,
     excludePaymentId: paymentId,
-  })
+  });
+
+  // Calcular monto_en_moneda_venta si no se proporciona
+  const montoConvertido = monto_en_moneda_venta || monto;
+
   if (
-    monto != null &&
-    Number(pagadoSinEste) + Number(monto) > Number(total)
+    montoConvertido != null &&
+    Number(pagadoSinEste) + Number(montoConvertido) > Number(total) + 0.01
   ) {
-    throw new Error('La suma de pagos excede el total de la venta')
+    throw new Error("La suma de pagos excede el total de la venta");
   }
 
-  const _ref = referencia ?? referencia_pago
+  const _ref = referencia ?? referencia_pago;
   const pago = await storage.updateVentaPayment({
     id: paymentId,
     venta_id: ventaId,
     metodo_pago_id,
     moneda_id,
     monto,
+    monto_en_moneda_venta: montoConvertido,
+    tasa_cambio: tasa_cambio || null,
     referencia_pago: _ref,
-  })
-  return pago
+  });
+  // updateEstadoPago ya se llama dentro de updateVentaPayment
+  return pago;
 };
 
 const deletePayment = async ({ request, params }) => {
   const { ventaId, paymentId } = params;
-  if (!ventaId || !paymentId) throw new Error('Missing ventaId/paymentId')
-  const pago = await storage.deleteVentaPayment({ id: paymentId, venta_id: ventaId })
-  return pago
+  if (!ventaId || !paymentId) throw new Error("Missing ventaId/paymentId");
+  const pago = await storage.deleteVentaPayment({
+    id: paymentId,
+    venta_id: ventaId,
+  });
+  return pago;
 };
 
 module.exports = {
@@ -540,4 +546,3 @@ module.exports = {
   updatePayment,
   deletePayment,
 };
-
