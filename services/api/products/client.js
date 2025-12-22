@@ -1,4 +1,5 @@
 const { fetchResultMysql } = require("libs/db");
+const stockFunctions = require("../purchase/stock-functions");
 
 const getProducts = fetchResultMysql(
   (
@@ -17,9 +18,13 @@ const getProducts = fetchResultMysql(
   ) =>
     connection.execute(
       `
-        SELECT p.*, pr.nombre as nombre_proveedor
+        SELECT 
+          p.*,
+          pr.nombre as nombre_proveedor,
+          COALESCE(ps.stock, 0) as stock
         FROM productos p
         LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
+        LEFT JOIN productos_stock ps ON ps.empresa_id = ? AND ps.producto_id = p.id
         WHERE p.empresa_id = ?
           AND (? IS NULL OR p.id = ?)  
           AND (? IS NULL OR p.codigo = ?)
@@ -27,11 +32,12 @@ const getProducts = fetchResultMysql(
           AND (? IS NULL OR p.descripcion LIKE CONCAT('%', ?, '%'))
           AND (? IS NULL OR p.categoria = ?)
           AND (? IS NULL OR p.estado = ?)
-          AND (? IS NULL OR p.stock = ?)
+          AND (? IS NULL OR COALESCE(ps.stock, 0) = ?)
           AND (? IS NULL OR pr.nombre LIKE CONCAT('%', ?, '%'))
           ORDER BY p.fecha_creacion DESC
         `,
       [
+        empresa_id,
         empresa_id,
         product_id ?? null,
         product_id ?? null,
@@ -62,9 +68,11 @@ const createProduct = fetchResultMysql(
       descripcion,
       categoria,
       estado = "activo",
-      stock = 0,
+      // El stock ya NO se asigna al crear producto.
+      // El stock debe venir únicamente por movimientos_inventario.
       precio = 0,
       proveedor_id,
+      usuario_id,
     },
     connection
   ) => {
@@ -77,10 +85,9 @@ const createProduct = fetchResultMysql(
         descripcion,
         categoria,
         estado,
-        stock,
         precio,
         proveedor_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         empresa_id,
@@ -89,18 +96,33 @@ const createProduct = fetchResultMysql(
         descripcion,
         categoria,
         estado,
-        stock,
         precio,
         proveedor_id,
       ]
     );
+
+    const [productoResult] = await connection.execute(
+      "SELECT * FROM productos WHERE id = LAST_INSERT_ID()"
+    );
+    const producto = productoResult[0];
+
+    // El stock inicial ya NO se asigna al crear un producto.
+    // El stock debe venir únicamente por movimientos_inventario.
+    // Si se necesita stock inicial, debe crearse un movimiento de inventario
+    // tipo 'entrada' después de crear el producto.
+
     const [result] = await connection.execute(
       `
-      SELECT p.*, pr.nombre as nombre_proveedor
+      SELECT 
+        p.*,
+        pr.nombre as nombre_proveedor,
+        COALESCE(ps.stock, 0) as stock
       FROM productos p
       LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
-      WHERE p.id = LAST_INSERT_ID()
-      `
+      LEFT JOIN productos_stock ps ON ps.empresa_id = ? AND ps.producto_id = p.id
+      WHERE p.id = ?
+      `,
+      [empresa_id, producto.id]
     );
     return result;
   },
@@ -110,6 +132,18 @@ const createProduct = fetchResultMysql(
 const deleteProducts = fetchResultMysql(async ({ product_ids }, connection) => {
   const ids = Array.isArray(product_ids) ? product_ids : [product_ids];
   const placeholders = ids.map(() => "?").join(",");
+
+  // Primero eliminar las cuentas por pagar relacionadas al producto
+  // Los abonos se eliminarán automáticamente por la foreign key con ON DELETE CASCADE
+  await connection.execute(
+    `
+    DELETE FROM cuentas_por_pagar 
+    WHERE producto_id IN (${placeholders})
+    `,
+    ids
+  );
+
+  // Luego eliminar el producto
   await connection.execute(
     `
     DELETE FROM productos 
@@ -134,7 +168,8 @@ const updateProduct = fetchResultMysql(
       descripcion,
       categoria,
       estado,
-      stock,
+      // El stock se gestiona únicamente vía movimientos_inventario/triggers.
+      // Aquí ignoramos cualquier intento de modificarlo directamente.
       proveedor_id,
     },
     connection
@@ -146,8 +181,7 @@ const updateProduct = fetchResultMysql(
     serie = ?, 
     descripcion = ?,
     categoria = ?, 
-    estado = ?, 
-    stock = ?,
+    estado = ?,
     proveedor_id = ?
     WHERE id = ? AND empresa_id = ?
     `,
@@ -157,20 +191,24 @@ const updateProduct = fetchResultMysql(
         descripcion,
         categoria,
         estado,
-        stock,
         proveedor_id,
         product_id,
         empresa_id,
       ]
     );
+
     const [result] = await connection.execute(
       `
-      SELECT p.*, pr.nombre as nombre_proveedor
+      SELECT 
+        p.*,
+        pr.nombre as nombre_proveedor,
+        COALESCE(ps.stock, 0) as stock
       FROM productos p
       LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
+      LEFT JOIN productos_stock ps ON ps.empresa_id = ? AND ps.producto_id = p.id
       WHERE p.id = ? AND p.empresa_id = ?
       `,
-      [product_id, empresa_id]
+      [empresa_id, product_id, empresa_id]
     );
     return result;
   }
@@ -306,9 +344,10 @@ const postProduct = async ({ request, params }) => {
     descripcion,
     categoria,
     estado,
-    stock,
+    // stock ya no es requerido ni se usa al crear producto
     precio,
     proveedor_id,
+    usuario_id,
   } = params;
 
   if (
@@ -317,8 +356,7 @@ const postProduct = async ({ request, params }) => {
     !serie ||
     !descripcion ||
     !categoria ||
-    !estado ||
-    stock === undefined
+    !estado
   ) {
     throw new Error("Missing required fields");
   }
@@ -330,9 +368,9 @@ const postProduct = async ({ request, params }) => {
     descripcion,
     categoria,
     estado,
-    stock,
     precio,
     proveedor_id,
+    usuario_id,
   });
   return product;
 };

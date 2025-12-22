@@ -6,9 +6,12 @@ const metodosPago = require("./metodosPago/client");
 const monedas = require("./monedas/client");
 const provider = require("./provider/client");
 const purchase = require("./purchase/client");
-const reportes = require("./reportes/client");
+const reportes2 = require("./reportes2/client");
 const metodosPagoUnificado = require("./metodosPagoUnificado/client");
 const productosPrecios = require("./productosPrecios/client");
+const transferencias = require("./transferencias/client");
+const cuentasPorCobrar = require("./cuentasPorCobrar/client");
+const cuentasPorPagar = require("./cuentasPorPagar/client");
 
 module.exports.router = () => {
   const routes = [
@@ -287,29 +290,86 @@ module.exports.router = () => {
           handler: purchase.deletePayment,
           public: false,
         },
-        //reportes
+        // Reportes - Ventas
         {
-          path: "inventario-con-metodo",
+          path: "reportes2/ventas-resumen",
           method: "GET",
-          handler: reportes.getReporteInventarioConMetodo,
+          handler: reportes2.getReporteVentasResumen,
           public: false,
         },
         {
-          path: "movimientos-inventario",
+          path: "reportes2/ventas-por-vendedor",
           method: "GET",
-          handler: reportes.getReporteMovimientosInventario,
+          handler: reportes2.getReporteVentasPorVendedor,
           public: false,
         },
         {
-          path: "stock-actual",
+          path: "reportes2/ventas-por-cliente",
           method: "GET",
-          handler: reportes.getReporteStockActual,
+          handler: reportes2.getReporteVentasPorCliente,
           public: false,
         },
         {
-          path: "ventas-con-pagos",
+          path: "reportes2/ventas-por-metodo-pago",
           method: "GET",
-          handler: reportes.getReporteVentasConPagos,
+          handler: reportes2.getReporteVentasPorMetodoPago,
+          public: false,
+        },
+        // Reportes - Cartera
+        {
+          path: "reportes2/cxc-aging",
+          method: "GET",
+          handler: reportes2.getReporteCxcAging,
+          public: false,
+        },
+        {
+          path: "reportes2/cxp-aging",
+          method: "GET",
+          handler: reportes2.getReporteCxpAging,
+          public: false,
+        },
+        {
+          path: "reportes2/flujo-caja-cartera",
+          method: "GET",
+          handler: reportes2.getReporteFlujoCaja,
+          public: false,
+        },
+        // Reportes - Inventario
+        {
+          path: "reportes2/inventario-rotacion",
+          method: "GET",
+          handler: reportes2.getReporteInventarioRotacion,
+          public: false,
+        },
+        {
+          path: "reportes2/inventario-baja-rotacion",
+          method: "GET",
+          handler: reportes2.getReporteInventarioBajaRotacion,
+          public: false,
+        },
+        {
+          path: "reportes2/inventario-rupturas",
+          method: "GET",
+          handler: reportes2.getReporteInventarioRupturas,
+          public: false,
+        },
+        // Reportes - Relaciones
+        {
+          path: "reportes2/top-clientes",
+          method: "GET",
+          handler: reportes2.getReporteTopClientes,
+          public: false,
+        },
+        {
+          path: "reportes2/top-proveedores",
+          method: "GET",
+          handler: reportes2.getReporteTopProveedores,
+          public: false,
+        },
+        {
+          path: "reportes2/clientes-riesgo",
+          method: "GET",
+          handler: reportes2.getReporteClientesRiesgo,
           public: false,
         },
         // /metodos-pago-unificado
@@ -354,6 +414,135 @@ module.exports.router = () => {
           path: "productos-precios",
           method: "DELETE",
           handler: productosPrecios.deleteProductoPrecio,
+          public: false,
+        },
+        //transferencias
+        {
+          path: "transferencias",
+          method: "GET",
+          handler: transferencias.getTransferencias,
+          public: false,
+        },
+        {
+          path: "transferencias/:transferencia_id",
+          method: "GET",
+          handler: transferencias.getTransferencia,
+          public: false,
+        },
+        {
+          path: "transferencias",
+          method: "POST",
+          handler: transferencias.postTransferencia,
+          public: false,
+        },
+        {
+          path: "transferencias/:transferencia_id",
+          method: "PUT",
+          handler: transferencias.putTransferencia,
+          public: false,
+        },
+        {
+          path: "transferencias/:transferencia_id/confirmar",
+          method: "POST",
+          handler: transferencias.confirmarTransferencia,
+          public: false,
+        },
+        {
+          path: "transferencias/:transferencia_id/cancelar",
+          method: "POST",
+          handler: transferencias.cancelarTransferencia,
+          public: false,
+        },
+        {
+          path: "transferencias/:transferencia_id",
+          method: "DELETE",
+          handler: transferencias.deleteTransferencia,
+          public: false,
+        },
+        //cuentas-por-pagar
+        {
+          path: "cuentas-por-pagar",
+          method: "GET",
+          handler: cuentasPorPagar.getCuentasPorPagar,
+          public: false,
+        },
+        {
+          path: "cuentas-por-pagar/resumen/proveedores",
+          method: "GET",
+          handler: cuentasPorPagar.getSaldoProveedores,
+          public: false,
+        },
+        {
+          path: "cuentas-por-pagar/:id",
+          method: "GET",
+          handler: cuentasPorPagar.getCuentaPorPagar,
+          public: false,
+        },
+        {
+          path: "cuentas-por-pagar",
+          method: "POST",
+          handler: cuentasPorPagar.postCuentaPorPagar,
+          public: false,
+        },
+        {
+          path: "cuentas-por-pagar/:id/abonos",
+          method: "POST",
+          handler: cuentasPorPagar.postAbono,
+          public: false,
+        },
+        {
+          path: "cuentas-por-pagar/:id/abonos/:abono_id",
+          method: "DELETE",
+          handler: cuentasPorPagar.deleteAbono,
+          public: false,
+        },
+        {
+          path: "cuentas-por-pagar/sync-from-compra/:compra_id",
+          method: "POST",
+          handler: cuentasPorPagar.syncFromCompra,
+          public: false,
+        },
+        //cuentas-por-cobrar
+        {
+          path: "cuentas-por-cobrar",
+          method: "GET",
+          handler: cuentasPorCobrar.getCuentasPorCobrar,
+          public: false,
+        },
+        {
+          path: "cuentas-por-cobrar/:id",
+          method: "GET",
+          handler: cuentasPorCobrar.getCuentaPorCobrar,
+          public: false,
+        },
+        {
+          path: "cuentas-por-cobrar",
+          method: "POST",
+          handler: cuentasPorCobrar.postCuentaPorCobrar,
+          public: false,
+        },
+        {
+          path: "cuentas-por-cobrar/:id",
+          method: "PUT",
+          handler: cuentasPorCobrar.putCuentaPorCobrar,
+          public: false,
+        },
+        {
+          path: "cuentas-por-cobrar/sync-from-venta/:venta_id",
+          method: "POST",
+          handler: cuentasPorCobrar.syncFromVenta,
+          public: false,
+        },
+        {
+          path: "cuentas-por-cobrar/:id/abonos",
+          method: "POST",
+          handler: cuentasPorCobrar.postAbono,
+          public: false,
+        },
+        {
+          path: "cuentas-por-cobrar/:id/abonos/:abono_id",
+          method: "DELETE",
+          handler: cuentasPorCobrar.deleteAbono,
           public: false,
         },
       ],

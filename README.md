@@ -34,6 +34,7 @@ kairo-core/
 ## Estructura Unificada
 
 El proyecto utiliza un **único servicio API** que maneja todas las rutas a través de:
+
 - **Un solo handler.js** - Punto de entrada único para todas las peticiones
 - **Un solo router.js** - Centraliza todas las definiciones de rutas
 - **Un solo serverless.yml** - Configuración única del servicio Lambda
@@ -41,18 +42,21 @@ El proyecto utiliza un **único servicio API** que maneja todas las rutas a trav
 ## Servicios Implementados
 
 ### 1. Clients (`/clients/clientes`)
+
 - `GET /clients/clientes` - Obtener clientes
 - `POST /clients/clientes` - Crear cliente
 - `PUT /clients/clientes` - Actualizar cliente
 - `DELETE /clients/clientes` - Eliminar cliente
 
 ### 2. Enterprise (`/enterprise/empresas`)
+
 - `GET /enterprise/empresas` - Obtener empresas
 - `POST /enterprise/empresas` - Crear empresa
 - `PUT /enterprise/empresas` - Actualizar empresa
 - `DELETE /enterprise/empresas` - Eliminar empresa
 
 ### 3. Products (`/products/productos`)
+
 - `GET /products/productos` - Obtener productos
 - `POST /products/productos` - Crear producto
 - `PUT /products/productos` - Actualizar producto
@@ -63,30 +67,35 @@ El proyecto utiliza un **único servicio API** que maneja todas las rutas a trav
 - `DELETE /products/productos/precios` - Eliminar precio
 
 ### 4. Inventory Movement (`/inventoryMovement/movimientos`)
+
 - `GET /inventoryMovement/movimientos` - Obtener movimientos de inventario
 - `POST /inventoryMovement/movimientos` - Crear movimiento
 - `PUT /inventoryMovement/movimientos` - Actualizar movimiento
 - `DELETE /inventoryMovement/movimientos` - Eliminar movimiento
 
 ### 5. Métodos de Pago (`/metodosPago/metodos-pago`)
+
 - `GET /metodosPago/metodos-pago` - Obtener métodos de pago
 - `POST /metodosPago/metodos-pago` - Crear método de pago
 - `PUT /metodosPago/metodos-pago` - Actualizar método de pago
 - `DELETE /metodosPago/metodos-pago` - Eliminar método de pago
 
 ### 6. Monedas (`/monedas/monedas`)
+
 - `GET /monedas/monedas` - Obtener monedas
 - `POST /monedas/monedas` - Crear moneda
 - `PUT /monedas/monedas` - Actualizar moneda
 - `DELETE /monedas/monedas` - Eliminar moneda
 
 ### 7. Provider (`/provider/proveedores`)
+
 - `GET /provider/proveedores` - Obtener proveedores
 - `POST /provider/proveedores` - Crear proveedor
 - `PUT /provider/proveedores` - Actualizar proveedor
 - `DELETE /provider/proveedores` - Eliminar proveedor
 
 ### 8. Purchase (`/purchase/ventas`)
+
 - `GET /purchase/ventas` - Obtener ventas
 - `GET /purchase/ventas/flat` - Obtener ventas (formato plano)
 - `POST /purchase/ventas` - Crear venta
@@ -100,17 +109,13 @@ El proyecto utiliza un **único servicio API** que maneja todas las rutas a trav
 - `PUT /purchase/ventas/:ventaId/pagos/:paymentId` - Actualizar pago
 - `DELETE /purchase/ventas/:ventaId/pagos/:paymentId` - Eliminar pago
 
-### 9. Reportes (`/reportes/`)
-- `GET /reportes/inventario-con-metodo` - Reporte de inventario con método
-- `GET /reportes/movimientos-inventario` - Reporte de movimientos de inventario
-- `GET /reportes/stock-actual` - Reporte de stock actual
-- `GET /reportes/ventas-con-pagos` - Reporte de ventas con pagos
+### 9. Métodos de Pago Unificado (`/metodosPagoUnificado/`)
 
-### 10. Métodos de Pago Unificado (`/metodosPagoUnificado/`)
 - `GET /metodosPagoUnificado/metodos-pago-unificado` - Obtener reporte unificado
 - `GET /metodosPagoUnificado/metodos-pago-unificado/resumen` - Obtener resumen
 
-### 11. Productos Precios (`/productosPrecios/`)
+### 10. Productos Precios (`/productosPrecios/`)
+
 - `GET /productosPrecios/precios` - Obtener precios
 - `GET /productosPrecios/precios/:producto_id` - Obtener precios por producto
 - `POST /productosPrecios/precios` - Crear precio
@@ -188,4 +193,3 @@ Para agregar nuevos servicios al API unificado:
 - **Un solo servicio Lambda** maneja todas las rutas a través de un proxy único
 - Las rutas se definen con el prefijo del servicio (ej: `clients/clientes`, `enterprise/empresas`)
 - Todas las rutas pasan por el mismo handler y router
-
