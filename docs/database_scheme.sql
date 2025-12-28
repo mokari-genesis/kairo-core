@@ -82,7 +82,7 @@ CREATE TABLE `cuentas_por_cobrar` (
   CONSTRAINT `fk_cxc_venta` FOREIGN KEY (`venta_id`) REFERENCES `ventas` (`id`) ON DELETE CASCADE,
   CONSTRAINT `cuentas_por_cobrar_chk_1` CHECK ((`total` >= 0)),
   CONSTRAINT `cuentas_por_cobrar_chk_2` CHECK ((`saldo` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- No native definition for element: idx_cxc_empresa_estado (index)
 
@@ -107,7 +107,7 @@ CREATE TABLE `cuentas_por_cobrar_abonos` (
   CONSTRAINT `fk_cxca_metodo` FOREIGN KEY (`metodo_pago_id`) REFERENCES `metodos_pago` (`id`),
   CONSTRAINT `fk_cxca_moneda` FOREIGN KEY (`moneda_id`) REFERENCES `monedas` (`id`),
   CONSTRAINT `cuentas_por_cobrar_abonos_chk_1` CHECK ((`monto` > 0))
-) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- cuentas_por_pagar: table
 CREATE TABLE `cuentas_por_pagar` (
@@ -180,7 +180,7 @@ CREATE TABLE `detalles_ventas` (
   CONSTRAINT `detalles_ventas_chk_1` CHECK ((`cantidad` > 0)),
   CONSTRAINT `detalles_ventas_chk_2` CHECK ((`precio_unitario` >= 0)),
   CONSTRAINT `detalles_ventas_chk_3` CHECK ((`subtotal` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=219 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=220 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- No native definition for element: idx_dv_venta_id (index)
 
@@ -276,7 +276,7 @@ CREATE TABLE `movimientos_inventario` (
   CONSTRAINT `fk_movs_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_movs_venta` FOREIGN KEY (`referencia`) REFERENCES `ventas` (`id`) ON DELETE SET NULL,
   CONSTRAINT `movimientos_inventario_chk_1` CHECK ((`cantidad` > 0))
-) ENGINE=InnoDB AUTO_INCREMENT=580 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=583 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- No native definition for element: idx_movs_empresa_id (index)
 
@@ -603,7 +603,7 @@ CREATE TABLE `productos` (
   KEY `idx_productos_master` (`producto_master_id`),
   CONSTRAINT `fk_productos_empresa` FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_productos_proveedor` FOREIGN KEY (`proveedor_id`) REFERENCES `proveedores` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=128 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=129 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- No native definition for element: idx_productos_empresa_id (index)
 
@@ -642,7 +642,7 @@ CREATE TABLE `productos_precios` (
   KEY `idx_pp_producto` (`producto_id`),
   CONSTRAINT `fk_pp_producto` FOREIGN KEY (`producto_id`) REFERENCES `productos` (`id`) ON DELETE CASCADE,
   CONSTRAINT `productos_precios_chk_1` CHECK ((`precio` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=132 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=133 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- No native definition for element: idx_pp_producto (index)
 
@@ -713,7 +713,7 @@ CREATE TABLE `transferencias_inventario` (
   CONSTRAINT `fk_ti_origen` FOREIGN KEY (`empresa_origen_id`) REFERENCES `empresas` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_ti_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL,
   CONSTRAINT `transferencias_inventario_chk_1` CHECK ((`empresa_origen_id` <> `empresa_destino_id`))
-) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- trg_confirmar_transferencia_au: trigger
 CREATE DEFINER=`administrattorLite`@`%` TRIGGER `trg_confirmar_transferencia_au` AFTER UPDATE ON `transferencias_inventario` FOR EACH ROW BEGIN
@@ -886,7 +886,7 @@ CREATE TABLE `transferencias_inventario_detalle` (
   CONSTRAINT `fk_tid_prod` FOREIGN KEY (`producto_id`) REFERENCES `productos` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_tid_transf` FOREIGN KEY (`transferencia_id`) REFERENCES `transferencias_inventario` (`id`) ON DELETE CASCADE,
   CONSTRAINT `transferencias_inventario_detalle_chk_1` CHECK ((`cantidad` > 0))
-) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- No native definition for element: idx_tid_transferencia (index)
 
@@ -903,7 +903,7 @@ CREATE TABLE `usuarios` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `cognito_id` (`cognito_id`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ventas: table
 CREATE TABLE `ventas` (
@@ -929,7 +929,7 @@ CREATE TABLE `ventas` (
   CONSTRAINT `fk_ventas_moneda` FOREIGN KEY (`moneda_id`) REFERENCES `monedas` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `fk_ventas_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL,
   CONSTRAINT `ventas_chk_1` CHECK ((`total` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=206 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=207 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- No native definition for element: idx_ventas_empresa_id (index)
 
@@ -1004,7 +1004,7 @@ CREATE TABLE `ventas_pagos` (
   CONSTRAINT `fk_vp_moneda` FOREIGN KEY (`moneda_id`) REFERENCES `monedas` (`id`),
   CONSTRAINT `fk_vp_venta` FOREIGN KEY (`venta_id`) REFERENCES `ventas` (`id`) ON DELETE CASCADE,
   CONSTRAINT `ventas_pagos_chk_1` CHECK ((`monto` > 0))
-) ENGINE=InnoDB AUTO_INCREMENT=186 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=187 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- No native definition for element: idx_vp_venta_id (index)
 
