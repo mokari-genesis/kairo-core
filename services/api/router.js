@@ -12,6 +12,7 @@ const productosPrecios = require("./productosPrecios/client");
 const transferencias = require("./transferencias/client");
 const cuentasPorCobrar = require("./cuentasPorCobrar/client");
 const cuentasPorPagar = require("./cuentasPorPagar/client");
+const usuarios = require("./usuarios/client");
 
 module.exports.router = () => {
   const routes = [
@@ -92,31 +93,6 @@ module.exports.router = () => {
           handler: products.deleteProduct,
           public: false,
         },
-        //productos-precios
-        // {
-        //   path: "productos-precios",
-        //   method: "GET",
-        //   handler: products.getPrecio,
-        //   public: false,
-        // },
-        // {
-        //   path: "productos-precios",
-        //   method: "POST",
-        //   handler: products.postPrecio,
-        //   public: false,
-        // },
-        // {
-        //   path: "productos-precios",
-        //   method: "PUT",
-        //   handler: products.putPrecio,
-        //   public: false,
-        // },
-        // {
-        //   path: "productos-precios",
-        //   method: "DELETE",
-        //   handler: products.deletePrecio,
-        //   public: false,
-        // },
         //inventoryMovement // inventory movements
         {
           path: "inventory-movement",
@@ -543,6 +519,31 @@ module.exports.router = () => {
           path: "cuentas-por-cobrar/:id/abonos/:abono_id",
           method: "DELETE",
           handler: cuentasPorCobrar.deleteAbono,
+          public: false,
+        },
+        //usuarios
+        {
+          path: "usuarios",
+          method: "GET",
+          handler: usuarios.getUsuario,
+          public: false,
+        },
+        {
+          path: "usuarios",
+          method: "POST",
+          handler: usuarios.postUsuario,
+          public: false,
+        },
+        {
+          path: "usuarios",
+          method: "PUT",
+          handler: usuarios.putUsuario,
+          public: false,
+        },
+        {
+          path: "usuarios",
+          method: "DELETE",
+          handler: usuarios.deleteUsuario,
           public: false,
         },
       ],
