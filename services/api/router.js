@@ -12,6 +12,7 @@ const productosPrecios = require("./productosPrecios/client");
 const transferencias = require("./transferencias/client");
 const cuentasPorCobrar = require("./cuentasPorCobrar/client");
 const cuentasPorPagar = require("./cuentasPorPagar/client");
+const compras = require("./compras/client");
 const usuarios = require("./usuarios/client");
 
 module.exports.router = () => {
@@ -476,6 +477,62 @@ module.exports.router = () => {
           path: "cuentas-por-pagar/sync-from-compra/:compra_id",
           method: "POST",
           handler: cuentasPorPagar.syncFromCompra,
+          public: false,
+        },
+        //compras
+        {
+          path: "compras",
+          method: "GET",
+          handler: compras.getCompras,
+          public: false,
+        },
+        {
+          path: "compras/:id",
+          method: "GET",
+          handler: compras.getCompra,
+          public: false,
+        },
+        {
+          path: "compras",
+          method: "POST",
+          handler: compras.postCompra,
+          public: false,
+        },
+        {
+          path: "compras/:id/anular",
+          method: "POST",
+          handler: compras.anularCompra,
+          public: false,
+        },
+        // Reportes - Compras
+        {
+          path: "reportes2/compras-por-rango-fechas",
+          method: "GET",
+          handler: compras.getComprasPorRangoFechas,
+          public: false,
+        },
+        {
+          path: "reportes2/compras-por-proveedor",
+          method: "GET",
+          handler: compras.getComprasPorProveedor,
+          public: false,
+        },
+        {
+          path: "reportes2/compras-contado-vs-credito",
+          method: "GET",
+          handler: compras.getComprasContadoVsCredito,
+          public: false,
+        },
+        {
+          path: "reportes2/cxp-por-compras",
+          method: "GET",
+          handler: compras.getCxpPorCompras,
+          public: false,
+        },
+        {
+          path: "reportes2/productos-mas-comprados",
+          method: "GET",
+          handler: compras.getProductosMasComprados,
           public: false,
         },
         //cuentas-por-cobrar
