@@ -9,7 +9,11 @@ const getCuentasPorPagar = async ({ request, params }) => {
     estado,
     fecha_inicio,
     fecha_fin,
+    id,
   } = params;
+
+  // Convertir id a número si está presente
+  const idNumber = id ? Number(id) : null;
 
   const cuentas = await storage.getCuentasPorPagar({
     empresa_id,
@@ -18,6 +22,7 @@ const getCuentasPorPagar = async ({ request, params }) => {
     estado,
     fecha_inicio,
     fecha_fin,
+    id: idNumber && !isNaN(idNumber) ? idNumber : null,
   });
 
   return cuentas;

@@ -14,7 +14,15 @@ const computeEstado = ({ saldo, total, fecha_vencimiento, estado_actual }) => {
 // Listar cuentas por pagar
 const getCuentasPorPagar = fetchResultMysql(
   (
-    { empresa_id, proveedor_id, compra_id, estado, fecha_inicio, fecha_fin },
+    {
+      empresa_id,
+      proveedor_id,
+      compra_id,
+      estado,
+      fecha_inicio,
+      fecha_fin,
+      id,
+    },
     connection
   ) =>
     connection.execute(
@@ -63,6 +71,7 @@ const getCuentasPorPagar = fetchResultMysql(
         AND (? IS NULL OR cxp.estado = ?)
         AND (? IS NULL OR DATE(cxp.fecha_emision) >= ?)
         AND (? IS NULL OR DATE(cxp.fecha_emision) <= ?)
+        AND (? IS NULL OR cxp.id = ?)
       GROUP BY cxp.id
       ORDER BY cxp.fecha_emision DESC, cxp.id DESC
       `,
@@ -79,6 +88,8 @@ const getCuentasPorPagar = fetchResultMysql(
         fecha_inicio || null,
         fecha_fin || null,
         fecha_fin || null,
+        id || null,
+        id || null,
       ]
     ),
   { singleResult: false }
