@@ -27,6 +27,7 @@ CREATE TABLE `compras` (
   `total` decimal(12,2) NOT NULL,
   `estado` enum('registrada','anulada') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'registrada',
   `moneda_id` int NOT NULL,
+  `tipo_pago` enum('contado','credito') COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Tipo de pago: contado (no genera CxP) o credito (genera CxP)',
   `comentario` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_compras_empresa` (`empresa_id`),
@@ -38,7 +39,7 @@ CREATE TABLE `compras` (
   CONSTRAINT `fk_compras_prov` FOREIGN KEY (`proveedor_id`) REFERENCES `proveedores` (`id`),
   CONSTRAINT `fk_compras_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL,
   CONSTRAINT `compras_chk_1` CHECK ((`total` >= 0))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- compras_detalles: table
 CREATE TABLE `compras_detalles` (
@@ -56,7 +57,7 @@ CREATE TABLE `compras_detalles` (
   CONSTRAINT `compras_detalles_chk_1` CHECK ((`cantidad` > 0)),
   CONSTRAINT `compras_detalles_chk_2` CHECK ((`costo_unitario` >= 0)),
   CONSTRAINT `compras_detalles_chk_3` CHECK ((`subtotal` >= 0))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- cuentas_por_cobrar: table
 CREATE TABLE `cuentas_por_cobrar` (
@@ -82,7 +83,7 @@ CREATE TABLE `cuentas_por_cobrar` (
   CONSTRAINT `fk_cxc_venta` FOREIGN KEY (`venta_id`) REFERENCES `ventas` (`id`) ON DELETE CASCADE,
   CONSTRAINT `cuentas_por_cobrar_chk_1` CHECK ((`total` >= 0)),
   CONSTRAINT `cuentas_por_cobrar_chk_2` CHECK ((`saldo` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- No native definition for element: idx_cxc_empresa_estado (index)
 
@@ -107,7 +108,7 @@ CREATE TABLE `cuentas_por_cobrar_abonos` (
   CONSTRAINT `fk_cxca_metodo` FOREIGN KEY (`metodo_pago_id`) REFERENCES `metodos_pago` (`id`),
   CONSTRAINT `fk_cxca_moneda` FOREIGN KEY (`moneda_id`) REFERENCES `monedas` (`id`),
   CONSTRAINT `cuentas_por_cobrar_abonos_chk_1` CHECK ((`monto` > 0))
-) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- cuentas_por_pagar: table
 CREATE TABLE `cuentas_por_pagar` (
@@ -135,7 +136,7 @@ CREATE TABLE `cuentas_por_pagar` (
   CONSTRAINT `fk_cxp_prov` FOREIGN KEY (`proveedor_id`) REFERENCES `proveedores` (`id`),
   CONSTRAINT `cuentas_por_pagar_chk_1` CHECK ((`total` >= 0)),
   CONSTRAINT `cuentas_por_pagar_chk_2` CHECK ((`saldo` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=48 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- No native definition for element: idx_cxp_empresa_estado (index)
 
@@ -160,7 +161,7 @@ CREATE TABLE `cuentas_por_pagar_abonos` (
   CONSTRAINT `fk_cxpa_metodo` FOREIGN KEY (`metodo_pago_id`) REFERENCES `metodos_pago` (`id`),
   CONSTRAINT `fk_cxpa_moneda` FOREIGN KEY (`moneda_id`) REFERENCES `monedas` (`id`),
   CONSTRAINT `cuentas_por_pagar_abonos_chk_1` CHECK ((`monto` > 0))
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- detalles_ventas: table
 CREATE TABLE `detalles_ventas` (
@@ -180,7 +181,7 @@ CREATE TABLE `detalles_ventas` (
   CONSTRAINT `detalles_ventas_chk_1` CHECK ((`cantidad` > 0)),
   CONSTRAINT `detalles_ventas_chk_2` CHECK ((`precio_unitario` >= 0)),
   CONSTRAINT `detalles_ventas_chk_3` CHECK ((`subtotal` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=220 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=222 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- No native definition for element: idx_dv_venta_id (index)
 
@@ -276,7 +277,7 @@ CREATE TABLE `movimientos_inventario` (
   CONSTRAINT `fk_movs_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_movs_venta` FOREIGN KEY (`referencia`) REFERENCES `ventas` (`id`) ON DELETE SET NULL,
   CONSTRAINT `movimientos_inventario_chk_1` CHECK ((`cantidad` > 0))
-) ENGINE=InnoDB AUTO_INCREMENT=583 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=633 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- No native definition for element: idx_movs_empresa_id (index)
 
@@ -382,185 +383,6 @@ CREATE DEFINER=`administrattorLite`@`%` TRIGGER `trg_movs_validar_compra_bi` BEF
   END IF;
 END;
 
--- trg_movs_crear_cxp_ai: trigger
-CREATE DEFINER=`administrattorLite`@`%` TRIGGER `trg_movs_crear_cxp_ai` AFTER INSERT ON `movimientos_inventario` FOR EACH ROW BEGIN
-  DECLARE v_empresa_id INT;
-  DECLARE v_proveedor_id INT;
-  DECLARE v_moneda_id INT;
-  DECLARE v_total DECIMAL(12,2);
-  DECLARE v_compra_id INT;
-  DECLARE v_compra_existe INT DEFAULT 0;
-  DECLARE v_moneda_base_id INT;
-
-  -- Solo procesar movimientos tipo entrada con precio_compra
-  IF NEW.tipo_movimiento = 'entrada'
-     AND NEW.precio_compra IS NOT NULL
-     AND NEW.precio_compra >= 0 THEN
-
-    -- Obtener empresa_id del movimiento
-    SET v_empresa_id = NEW.empresa_id;
-
-    -- Obtener proveedor_id del producto
-    SELECT proveedor_id INTO v_proveedor_id
-    FROM productos
-    WHERE id = NEW.producto_id;
-
-    -- Obtener moneda base (moneda con es_base = 1)
-    SELECT id INTO v_moneda_base_id
-    FROM monedas
-    WHERE es_base = 1
-    LIMIT 1;
-
-    -- Si no hay moneda base, usar la primera moneda activa
-    IF v_moneda_base_id IS NULL THEN
-      SELECT id INTO v_moneda_base_id
-      FROM monedas
-      WHERE activo = 1
-      ORDER BY id
-      LIMIT 1;
-    END IF;
-
-    SET v_moneda_id = v_moneda_base_id;
-    SET v_total = ROUND(NEW.cantidad * NEW.precio_compra, 2);
-
-    -- ESCENARIO 1: Si compra_id es NULL, crear CxP directamente
-    IF NEW.compra_id IS NULL THEN
-      -- Verificar si ya existe una CxP para este proveedor con el mismo total y fecha reciente
-      -- (para evitar duplicados si se crean múltiples movimientos del mismo proveedor)
-      IF NOT EXISTS (
-        SELECT 1
-        FROM cuentas_por_pagar
-        WHERE proveedor_id = v_proveedor_id
-          AND empresa_id = v_empresa_id
-          AND compra_id IS NULL
-          AND total = v_total
-          AND DATE(fecha_emision) = CURDATE()
-          AND estado != 'anulada'
-      ) THEN
-        INSERT INTO cuentas_por_pagar (
-          empresa_id,
-          proveedor_id,
-          compra_id,
-          producto_id,
-          producto_descripcion,
-          moneda_id,
-          total,
-          saldo,
-          fecha_emision,
-          fecha_vencimiento,
-          estado,
-          comentario
-        ) VALUES (
-          v_empresa_id,
-          v_proveedor_id,
-          NULL,
-          NEW.producto_id,
-          (SELECT descripcion FROM productos WHERE id = NEW.producto_id LIMIT 1),
-          v_moneda_id,
-          v_total,
-          v_total,
-          CURDATE(),
-          NULL,
-          'abierta',
-          CONCAT(
-            'Generada automáticamente por movimiento de inventario entrada. Movimiento #',
-            NEW.id,
-            '. Producto: ',
-            (SELECT descripcion FROM productos WHERE id = NEW.producto_id LIMIT 1)
-          )
-        );
-      END IF;
-
-    -- ESCENARIO 2: Si compra_id existe, verificar si la compra existe
-    ELSE
-      SET v_compra_id = NEW.compra_id;
-
-      -- Verificar si la compra existe
-      SELECT COUNT(*) INTO v_compra_existe
-      FROM compras
-      WHERE id = v_compra_id;
-
-      -- Si la compra no existe, crearla primero
-      IF v_compra_existe = 0 THEN
-        INSERT INTO compras (
-          empresa_id, proveedor_id, usuario_id, total, estado, moneda_id, comentario
-        ) VALUES (
-          v_empresa_id, v_proveedor_id, NEW.usuario_id, v_total, 'registrada', v_moneda_id,
-          CONCAT('Compra generada automáticamente desde movimiento de inventario #', NEW.id)
-        );
-
-        SET v_compra_id = LAST_INSERT_ID();
-
-        -- Actualizar el movimiento con el nuevo compra_id
-        UPDATE movimientos_inventario
-        SET compra_id = v_compra_id
-        WHERE id = NEW.id;
-
-        -- Crear detalle de compra
-        INSERT INTO compras_detalles (
-          compra_id, producto_id, cantidad, costo_unitario, subtotal
-        ) VALUES (
-          v_compra_id, NEW.producto_id, NEW.cantidad, NEW.precio_compra, v_total
-        );
-      ELSE
-        -- Si la compra existe, obtener moneda_id de la compra
-        SELECT moneda_id INTO v_moneda_id
-        FROM compras
-        WHERE id = v_compra_id;
-      END IF;
-
-      -- Crear cuenta por pagar si no existe para esta compra
-      IF NOT EXISTS (
-        SELECT 1 FROM cuentas_por_pagar WHERE compra_id = v_compra_id
-      ) THEN
-        -- Obtener empresa_id y proveedor_id de la compra (por si acaso)
-        SELECT empresa_id, proveedor_id, moneda_id
-          INTO v_empresa_id, v_proveedor_id, v_moneda_id
-        FROM compras
-        WHERE id = v_compra_id;
-
-        -- Obtener el total de la compra (puede ser diferente si hay múltiples movimientos)
-        SELECT COALESCE(SUM(cantidad * costo_unitario), v_total) INTO v_total
-        FROM compras_detalles
-        WHERE compra_id = v_compra_id;
-
-        -- Si no hay detalles, usar el total del movimiento
-        IF v_total IS NULL OR v_total = 0 THEN
-          SET v_total = ROUND(NEW.cantidad * NEW.precio_compra, 2);
-        END IF;
-
-        INSERT INTO cuentas_por_pagar (
-          empresa_id,
-          proveedor_id,
-          compra_id,
-          producto_id,
-          producto_descripcion,
-          moneda_id,
-          total,
-          saldo,
-          fecha_emision,
-          fecha_vencimiento,
-          estado,
-          comentario
-        ) VALUES (
-          v_empresa_id,
-          v_proveedor_id,
-          v_compra_id,
-          NEW.producto_id,
-          (SELECT descripcion FROM productos WHERE id = NEW.producto_id LIMIT 1),
-          v_moneda_id,
-          v_total,
-          v_total,
-          CURDATE(),
-          NULL,
-          'abierta',
-          CONCAT('Generada automáticamente por movimiento de inventario entrada. Movimiento #', NEW.id)
-        );
-      END IF;
-    END IF;
-  END IF;
-END;
-
 -- trg_aplicar_movimiento_stock_bu: trigger
 CREATE DEFINER=`administrattorLite`@`%` TRIGGER `trg_aplicar_movimiento_stock_bu` BEFORE UPDATE ON `movimientos_inventario` FOR EACH ROW BEGIN
   /* Bloquear cambios que afectan stock */
@@ -603,7 +425,7 @@ CREATE TABLE `productos` (
   KEY `idx_productos_master` (`producto_master_id`),
   CONSTRAINT `fk_productos_empresa` FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_productos_proveedor` FOREIGN KEY (`proveedor_id`) REFERENCES `proveedores` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=129 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=142 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- No native definition for element: idx_productos_empresa_id (index)
 
@@ -642,7 +464,7 @@ CREATE TABLE `productos_precios` (
   KEY `idx_pp_producto` (`producto_id`),
   CONSTRAINT `fk_pp_producto` FOREIGN KEY (`producto_id`) REFERENCES `productos` (`id`) ON DELETE CASCADE,
   CONSTRAINT `productos_precios_chk_1` CHECK ((`precio` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=133 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=162 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- No native definition for element: idx_pp_producto (index)
 
@@ -929,7 +751,7 @@ CREATE TABLE `ventas` (
   CONSTRAINT `fk_ventas_moneda` FOREIGN KEY (`moneda_id`) REFERENCES `monedas` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `fk_ventas_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL,
   CONSTRAINT `ventas_chk_1` CHECK ((`total` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=207 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=209 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- No native definition for element: idx_ventas_empresa_id (index)
 
@@ -1004,7 +826,7 @@ CREATE TABLE `ventas_pagos` (
   CONSTRAINT `fk_vp_moneda` FOREIGN KEY (`moneda_id`) REFERENCES `monedas` (`id`),
   CONSTRAINT `fk_vp_venta` FOREIGN KEY (`venta_id`) REFERENCES `ventas` (`id`) ON DELETE CASCADE,
   CONSTRAINT `ventas_pagos_chk_1` CHECK ((`monto` > 0))
-) ENGINE=InnoDB AUTO_INCREMENT=187 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=189 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- No native definition for element: idx_vp_venta_id (index)
 
